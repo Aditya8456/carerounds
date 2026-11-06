@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B1F4D">
+<title>CareRounds · Sources</title>
+<style>
+:root{--navy:#0B1F4D;--blue:#1F5FE0;--sky:#4FB3F6;--ink:#13213F;--muted:#5A6A8C;--line:#D9E1EE;--bg:#F4F6FA}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:22px 20px}
+header .in,main{max-width:900px;margin:0 auto}
+header h1{margin:0;font-size:26px}
+header p{margin:6px 0 0;color:#C9D6F2;font-size:15px}
+header a{color:var(--sky)}
+main{padding:20px 20px 48px}
+section{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:16px}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);margin:0 0 4px}
+.why{color:var(--muted);font-size:14px;margin:0 0 10px}
+ol{margin:0;padding-left:22px}
+li{margin:7px 0}
+li span{display:block;color:var(--muted);font-size:14px}
+a{color:var(--blue);word-break:break-word}
+.note{font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <h1>CareRounds: sources used</h1>
+  <p>HiLabs APM Product Case 2026–27 · deck, spreadsheet annex and prototype · <a href="./">open the prototype</a></p>
+</div></header>
+<main>
+<p class="note">All patient data in the deck, annex and prototype is synthetic. Public sources only. Figures marked "estimate" on the slides are our own.</p>
+
+<section><h2>1. The case</h2>
+<ol><li>HiLabs, Product Caselet 2026–27: "Reimagining the Case Management Workbench" (problem statement, Maria's Monday, deliverables and scoring).</li></ol></section>
+
+<section><h2>2. Market and where to launch</h2><p class="why">Slide 3: market size, SNP share, Star bonus, why dual-eligible plans first.</p>
+<ol>
+<li><a href="https://www.kff.org/medicare/medicare-advantage-enrollment-update-and-key-trends/">KFF, Medicare Advantage in 2026: Enrollment Update and Key Trends</a><span>35.5M MA members; 23% in Special Needs Plans.</span></li>
+<li><a href="https://www.wakely.com/wp-content/uploads/2026/02/The-Value-Shift-How-Medicare-Advantage-Benefits-Are-Evolving-for-2026.pdf">Wakely, The Value Shift: How MA Benefits Are Evolving for 2026</a><span>~6.0M dual-eligible D-SNP members.</span></li>
+<li><a href="https://kffhealthnews.org/news/medicare-advantage-bonuses">KFF Health News, Medicare Advantage bonuses</a><span>5% quality bonus for plans rated 4 stars or more.</span></li>
+<li><a href="https://www.beckerspayer.com/payer/why-good-is-expensive-the-cost-of-falling-below-4-stars-in-medicare-advantage/">Becker's Payer Issues, Why good is expensive: the cost of falling below 4 stars</a><span>4-star threshold for the bonus.</span></li>
+<li>CMS, Special Needs Plan Model of Care<span>Every SNP member needs a risk assessment, care plan and care team.</span></li>
+</ol></section>
+
+<section><h2>3. Maria's day</h2><p class="why">Slide 2: where the 480-minute day goes, assumptions and how sure we are.</p>
+<ol>
+<li><a href="https://www.publish.csiro.au/AH/AH20078">Australian Health Review (CSIRO), time-and-motion study of case managers</a><span>Documentation takes 29–37% of time.</span></li>
+<li><a href="https://bmchealthservres.biomedcentral.com/articles/10.1186/s12913-016-1333-6">BMC Health Services Research, how case managers spend their time</a></li>
+<li><a href="https://naylornetwork.com/cmsapulse/articles/print.asp?aid=258817">Case Management Society of America, What is an average caseload?</a></li>
+<li><a href="https://www.bostonglobe.com/business/2016/03/24/hardtoreach/P04VADqQpoZ80jdNOYrnFJ/story.html">Boston Globe, hard-to-reach members</a><span>~30% of members are hard to reach.</span></li>
+<li><a href="https://www.wolterskluwer.com/en/expert-insights/targeted-member-engagement-can-help-payers-close-care-gaps">Wolters Kluwer, targeted member engagement and care gaps</a></li>
+</ol></section>
+
+<section><h2>4. Evidence behind the Today Score</h2><p class="why">Slide 7 and the prototype's "How the ranking works".</p>
+<ol>
+<li><a href="https://www.news-medical.net/news/20100505/Study-finds-early-follow-up-for-heart-failure-patients-reduces-readmission-rates.aspx">Hernandez et al., JAMA 2010 (summary)</a><span>Early follow-up after heart-failure discharge: ~15% fewer readmissions. Deadline part.</span></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/29468640/">El Morabet et al., J Am Geriatr Soc 2018</a><span>21% of readmissions drug-related, 69% of those preventable. Danger-now part.</span></li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/2845681">van Walraven et al., CMAJ 2010: the LACE index</a><span>Hospital-history cut-offs.</span></li>
+<li><a href="https://boris.unibe.ch/44357">Donzé et al., the HOSPITAL score</a><span>Hospital-history cut-offs.</span></li>
+<li><a href="https://doaj.org/article/f38268e4e00444e1bb923a0b8a8d1727">Alqahtani et al., European Respiratory Review 2020</a><span>Depression OR 1.19 for readmission. Mental-health part.</span></li>
+<li><a href="https://link.springer.com/content/pdf/10.1007/s11606-021-06646-3.pdf">J Gen Intern Med 2021, social needs and readmission</a><span>Housing and transport odds ratios. Life-barriers part.</span></li>
+<li><a href="https://www.urbanhealthtoday.com/post/social-needs-drive-healthcare-utilization-among-medicare-and-medicaid-patients">Urban Health Today, social needs drive use among Medicare and Medicaid patients</a></li>
+</ol></section>
+
+<section><h2>5. Rules the product follows</h2><p class="why">2-day contact clock, consent and caregiver permission.</p>
+<ol>
+<li><a href="https://www.hhs.gov/guidance/sites/default/files/hhs-guidance-documents/CMS/mln908628_08_2025_transitional_care_management_final.pdf">CMS MLN booklet, Transitional Care Management (2025)</a><span>Contact within 2 business days of discharge; keep trying and record attempts.</span></li>
+<li><a href="https://www.aafp.org/practice-operations/billing-and-coding/transitional-care-management">AAFP, Transitional care management toolkit</a></li>
+<li><a href="https://www.ecfr.gov/current/title-42/chapter-I/subchapter-A/part-2">42 CFR Part 2 (eCFR)</a><span>Substance-use treatment records need consent (Tanya).</span></li>
+<li><a href="https://www.hhs.gov/hipaa/for-professionals/privacy/guidance/personal-representatives/index.html">HHS, HIPAA personal representatives</a><span>Permission before sharing details with a caregiver (Eleanor's daughter).</span></li>
+<li>NCQA HEDIS measures: Transitions of Care, Follow-Up After ED Visit, medication adherence<span>Why case-management work moves Star ratings.</span></li>
+</ol></section>
+
+<section><h2>6. Costs and pricing</h2><p class="why">Slide 11: cost vs value.</p>
+<ol>
+<li><a href="https://hcup-us.ahrq.gov/reports/statbriefs/sb278-Conditions-Frequent-Readmissions-By-Payer-2018.jsp">AHRQ HCUP Statistical Brief #278 (2018)</a><span>Average 30-day readmission cost $15,200.</span></li>
+<li><a href="https://www.bls.gov/oes/2023/May/oes291141.htm">US Bureau of Labor Statistics, Registered Nurses, May 2023</a><span>Mean wage $94,480; with ~25% benefits ≈ $118k.</span></li>
+<li><a href="https://www.capterra.com/p/172299/Health-Cloud/pricing/">Capterra, Salesforce Health Cloud pricing</a><span>$350–750 per user per month (benchmark for our $150–300 estimate).</span></li>
+</ol></section>
+
+<section><h2>7. Synthetic data and medical codes</h2><p class="why">Slide 6 and the spreadsheet annex.</p>
+<ol>
+<li><a href="https://github.com/synthetichealth/synthea">Synthea, open-source synthetic patient generator (MITRE)</a><span>Source of the real RxNorm, LOINC and SNOMED codes.</span></li>
+<li><a href="https://rxnav.nlm.nih.gov/">NLM RxNav</a><span>Every drug code checked on 6 Nov 2026.</span></li>
+<li><a href="https://loinc.org/">LOINC</a><span>Lab and questionnaire codes (NT-proBNP, eGFR, PHQ-9, GAD-7).</span></li>
+<li><a href="https://github.com/HL7/fhir-sdoh-clinicalcare">HL7 Gravity Project, social-needs (SDOH) standard</a></li>
+<li><a href="https://github.com/medplum/medplum-task-demo">Medplum task demo</a> and <a href="https://github.com/medplum/foomedical">Foo Medical</a><span>Open-source care-team task and member views.</span></li>
+</ol></section>
+
+<section><h2>8. Design research for the prototype</h2>
+<ol>
+<li><a href="https://linear.app/docs/triage">Linear, Triage inbox</a><span>List on the left, detail on the right; keyboard J/K.</span></li>
+<li><a href="https://design-system.service.gov.uk/patterns/complete-multiple-tasks/">GOV.UK Design System, Complete multiple tasks</a><span>Few task statuses; colour only for what needs attention.</span></li>
+<li><a href="https://service-manual.nhs.uk/design-system/components/warning-callout">NHS digital service manual, Warning callout</a><span>At most 2 warnings per page; clear headings.</span></li>
+<li><a href="https://github.com/vercel-labs/web-interface-guidelines">Vercel, Web Interface Guidelines</a><span>Keyboard, deep links, Undo, no dead ends, colour never alone.</span></li>
+<li><a href="https://www.thieme-connect.de/products/ejournals/abstract/10.1055/a-2345-6475?lang=en">Applied Clinical Informatics, reducing nursing alerts</a><span>Why "Not useful?" feedback on alerts.</span></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/32167479/">JMIR 2020, involving end users in medication alerts</a></li>
+<li><a href="https://github.com/tabler/tabler-icons">Tabler Icons (MIT licence)</a><span>Icons used in the deck.</span></li>
+</ol></section>
+
+<section><h2>9. Product method and writing</h2>
+<ol>
+<li><a href="https://github.com/deanpeters/Product-Manager-Skills">Dean Peters, Product-Manager-Skills</a><span>Problem statement, persona, jobs-to-be-done, opportunity tree, RICE, pre-mortem.</span></li>
+<li>pm-skills (product-on-purpose), awesome.ecosyste.ms</li>
+<li><a href="https://github.com/textstat/textstat">textstat</a> and <a href="https://github.com/btford/write-good">write-good</a><span>Readability and plain-language checks on all slide text.</span></li>
+<li>Reference case decks for layout: DICEruptors and DICECREAM (Meesho DICE Challenge) and Nexus (IIT Madras teams)</li>
+</ol></section>
+</main>
+</body>
+</html>
