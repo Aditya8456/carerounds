@@ -3,296 +3,329 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B1F4D">
 <title>CareRounds</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: app shell — navy top bar, white working surface, cards only where a decision lives */
 :root{
-  --navy:#0B1F4D; --blue:#1F5FE0; --sky:#E9F0FD; --ink:#13213F; --muted:#5A6A8C; --line:#D6E0F2;
-  --bg:#F6F8FD; --surface:#FFFFFF; --bar:#0B1F4D; --bar-fg:#FFFFFF;
-  --red:#C62D2D; --red-bg:#FDECEC; --amber:#B86A00; --amber-bg:#FFF3DC; --green:#1E7B4F; --green-bg:#E3F5EC;
-  --s-deadline:#1F5FE0; --s-danger:#D9480F; --s-history:#6C8EF5; --s-sick:#9DB8F7; --s-mind:#2E9C93; --s-life:#A5B0C7;
-  --ai:#5B3FD6; --ai-bg:#EFEBFD;
-  --f-display:"Lexend","Segoe UI",system-ui,sans-serif; --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --navy:#0B1F4D;--blue:#1F5FE0;--blue-d:#1849B8;--sky:#4FB3F6;--ice:#E9F0FD;
+  --bg:#F4F6FA;--surface:#FFFFFF;--line:#D9E1EE;--line-2:#E9EEF6;
+  --ink:#13213F;--muted:#5A6A8C;--faint:#8592AD;
+  --red:#B42318;--red-bg:#FEF3F2;--amber:#B54708;--amber-bg:#FFFAEB;--green:#067647;--green-bg:#ECFDF3;
+  --p1:#1F5FE0;--p2:#D9480F;--p3:#6C8EF5;--p4:#9DB8F7;--p5:#2E9C93;--p6:#A5B0C7;
+  --f-live:#2BB673;--f-recent:#E7B416;--f-lag:#EE8433;--f-stale:#D64545;
+  color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --navy:#9DB8F7; --blue:#6E9BFF; --sky:#16264A; --ink:#E6ECFA; --muted:#9FB0D3; --line:#24365F;
-  --bg:#0A1430; --surface:#111D3D; --bar:#060E24; --bar-fg:#E6ECFA;
-  --red:#FF7B7B; --red-bg:#3A1620; --amber:#F2B44C; --amber-bg:#33260E; --green:#5FD39A; --green-bg:#0F2E22;
-  --ai:#B4A3FF; --ai-bg:#231B47; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --navy:#9DB8F7; --blue:#6E9BFF; --sky:#16264A; --ink:#E6ECFA; --muted:#9FB0D3; --line:#24365F;
-  --bg:#0A1430; --surface:#111D3D; --bar:#060E24; --bar-fg:#E6ECFA;
-  --red:#FF7B7B; --red-bg:#3A1620; --amber:#F2B44C; --amber-bg:#33260E; --green:#5FD39A; --green-bg:#0F2E22;
-  --ai:#B4A3FF; --ai-bg:#231B47; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bar)}
-.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;color:var(--ink)}
-h1{font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.15;font-weight:700}
-h2{font-size:1.3rem;font-weight:600}
-h3{font-size:1rem;font-weight:600}
-p{margin:0}
-.mono{font-family:var(--f-mono);font-size:.82em}
-.muted{color:var(--muted)}
-.label{font-family:var(--f-display);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
-button{font:inherit;cursor:pointer}
-:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+a{color:var(--blue)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:#fff;padding:8px 12px;z-index:50}
+.skip:focus{left:8px}
 
 /* top bar */
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bar);color:var(--bar-fg)}
-.top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:10px}
-.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:1.15rem;color:var(--bar-fg);text-decoration:none}
-.logo svg{flex:none}
-.nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
-.nav a{color:var(--bar-fg);opacity:.75;text-decoration:none;font-family:var(--f-display);font-size:.9rem;padding:6px 12px;border-radius:999px}
-.nav a:hover{opacity:1}
-.nav a[aria-current="page"]{opacity:1;background:rgba(255,255,255,.14)}
-.demo-tag{font-size:.75rem;background:rgba(255,255,255,.12);padding:3px 10px;border-radius:999px;color:var(--bar-fg)}
+.top{height:52px;background:var(--navy);color:#fff;display:flex;align-items:center;gap:20px;padding:0 20px;position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;letter-spacing:.1px}
+.brand svg{flex:none}
+.topnav{display:flex;gap:2px;height:100%}
+.topnav a{display:flex;align-items:center;padding:0 12px;color:#C9D6F2;text-decoration:none;font-size:14px;border-bottom:3px solid transparent}
+.topnav a[aria-current]{color:#fff;border-bottom-color:var(--sky);font-weight:600}
+.search{margin-left:auto;position:relative}
+.search input{width:280px;height:32px;border-radius:6px;border:1px solid #2C4580;background:#132A63;color:#fff;padding:0 34px 0 32px;font-size:14px}
+.search input::placeholder{color:#9FB2DD}
+.search svg{position:absolute;left:9px;top:8px}
+.search kbd{position:absolute;right:8px;top:6px}
+kbd{font:12px/18px ui-monospace,Consolas,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:#fff;color:var(--muted)}
+.top kbd{background:transparent;border-color:#3A5596;color:#9FB2DD}
+.who{display:flex;align-items:center;gap:10px;font-size:13px;color:#C9D6F2}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
 
-main{padding-block:24px 64px}
-.view{display:grid;gap:20px}
+/* day bar */
+.day{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 20px 12px;display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap}
+.day h1{margin:0;font-size:22px;line-height:1.2}
+.day .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.daystats{display:flex;gap:22px;margin-left:auto;align-items:flex-end}
+.stat{font-size:12px;color:var(--muted)}
+.stat b{display:block;font-size:20px;color:var(--ink);line-height:1.1}
+.stat.red b{color:var(--red)}.stat.amber b{color:var(--amber)}.stat.green b{color:var(--green)}
+.progress{width:170px}
+.progress .track{height:6px;background:var(--line-2);border-radius:3px;margin-top:6px;overflow:hidden}
+.progress .fill{height:100%;background:var(--green);width:0;transition:width .3s ease}
 
-/* overview */
-.hero{background:linear-gradient(135deg,#0B1F4D 0%,#163A8C 60%,#1F5FE0 100%);color:#fff;border-radius:20px;padding:36px clamp(20px,4vw,48px);display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center}
-.hero h1{color:#fff}
-.hero p{color:#D9E4FF;font-size:1.05rem;max-width:58ch;margin-top:12px}
-.hero .cta{display:inline-flex;margin-top:20px;background:#fff;color:#0B1F4D;border:0;border-radius:999px;padding:11px 22px;font-family:var(--f-display);font-weight:600;text-decoration:none}
-.hero-card{background:#fff;color:#13213F;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,.25);display:grid;gap:10px}
-.hero-card .row{display:flex;align-items:center;gap:10px;font-size:.9rem}
-.hero-card .row b{font-family:var(--f-display)}
-.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.pillar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:8px;align-content:start}
-.pillar .k{font-family:var(--f-display);font-size:.8rem;color:var(--blue);font-weight:600}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.stat{padding:16px 18px;border-left:3px solid var(--blue);background:var(--surface);border-radius:0 12px 12px 0}
-.stat .n{font-family:var(--f-display);font-size:1.7rem;font-weight:700;color:var(--navy)}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-family:var(--f-display);font-weight:500;font-size:.78rem;color:var(--muted);letter-spacing:.03em}
-.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;align-content:start;min-width:0}
+/* layout */
+.work[hidden]{display:none}
+.work{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 52px - 76px)}
+.listpane{border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column}
+.filters{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--line-2);flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 11px;font-size:13px;cursor:pointer;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.list{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:4px 1fr auto;gap:0 12px;padding:12px 14px 12px 0;border-bottom:1px solid var(--line-2);cursor:pointer;position:relative}
+.row:hover{background:#F8FAFE}
+.row[aria-selected="true"]{background:var(--ice)}
+.row .stripe{grid-row:1/4;border-radius:0 3px 3px 0}
+.row .name{font-weight:600;font-size:15px}
+.row .name small{font-weight:400;color:var(--muted);font-size:13px;margin-left:4px}
+.row .why{grid-column:2/4;color:#33415F;font-size:13px;margin-top:3px}
+.row .meta{grid-column:2/4;display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center}
+.row .score{text-align:right;font-weight:700;font-size:20px;line-height:1.1}
+.row .score small{display:block;font-weight:400;font-size:11px;color:var(--faint)}
+.row.done .name,.row.done .why{color:var(--faint)}
+.more{padding:14px;color:var(--muted);font-size:13px;border-bottom:1px solid var(--line-2)}
+.more b{color:var(--ink)}
+.keys{margin-top:auto;padding:10px 14px;font-size:12px;color:var(--faint);border-top:1px solid var(--line-2)}
 
-/* pills & badges */
-.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-display);font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
-.b-now{background:var(--red-bg);color:var(--red)}
-.b-today{background:var(--amber-bg);color:var(--amber)}
-.b-week{background:var(--green-bg);color:var(--green)}
-.fresh{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;color:var(--muted);white-space:nowrap}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
-.d-live{background:#2BB673}.d-recent{background:#E7B416}.d-lag{background:#EE8433}.d-stale{background:#D64545}
-.ai-tag{display:inline-flex;gap:4px;align-items:center;font-size:.72rem;font-weight:600;color:var(--ai);background:var(--ai-bg);padding:2px 8px;border-radius:999px;font-family:var(--f-display)}
+/* tags */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:1px 8px;border-radius:4px;white-space:nowrap}
+.tag i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.t-now{background:var(--red-bg);color:var(--red)}.t-now i{background:var(--red)}
+.t-today{background:var(--amber-bg);color:var(--amber)}.t-today i{background:#DC6803}
+.t-week{background:var(--green-bg);color:var(--green)}.t-week i{background:#17B26A}
+.t-plain{background:#F1F4F9;color:var(--muted);font-weight:500}
+.t-due{background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:500}
+.t-due.hot{border-color:#F4B4AE;color:var(--red)}
+.st{font-size:12px;color:var(--muted)}
+.st.done{color:var(--green);font-weight:600}
+.st.tried{color:var(--amber);font-weight:600}
 
-/* my day */
-.dayhead{display:flex;flex-wrap:wrap;gap:16px;align-items:end;justify-content:space-between}
-.counts{display:flex;gap:10px;flex-wrap:wrap}
-.count{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:110px}
-.count .n{font-family:var(--f-display);font-weight:700;font-size:1.4rem}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted)}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
-.queue{display:grid;gap:12px}
-.qcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:start}
-.qcard.now{border-left:5px solid var(--red)}.qcard.today{border-left:5px solid var(--amber)}.qcard.week{border-left:5px solid var(--green)}
-.rank{font-family:var(--f-display);font-size:1.5rem;font-weight:700;color:var(--muted);text-align:center}
-.qmain{display:grid;gap:8px;min-width:0}
-.qtitle{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
-.qtitle h3{font-size:1.1rem}
-.why{font-size:.95rem}
-.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--sky);max-width:420px}
+/* detail */
+.detail{padding:18px 24px 40px;min-width:0}
+.mhead{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.mhead h2{margin:0;font-size:24px;line-height:1.2}
+.mhead .facts{color:var(--muted);font-size:13px;margin-top:4px}
+.mhead .facts span+span::before{content:"·";margin:0 7px;color:var(--faint)}
+.scorebox{margin-left:auto;text-align:right}
+.scorebox .big{font-size:30px;font-weight:700;line-height:1}
+.scorebox .big small{font-size:14px;color:var(--faint);font-weight:400}
+.linkbtn{background:none;border:0;padding:0;color:var(--blue);cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:2px}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line-2);width:220px;margin:8px 0 6px auto}
 .bar i{display:block;height:100%}
-.scoreline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.score{font-family:var(--f-display);font-weight:700;font-size:1.25rem;color:var(--navy);font-variant-numeric:tabular-nums}
-.score small{font-weight:400;font-size:.75rem;color:var(--muted)}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font-size:.8rem;border:1px solid var(--line);border-radius:8px;padding:2px 8px;background:var(--bg)}
-.qact{display:grid;gap:8px;justify-items:end}
-.btn{border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:10px;padding:8px 14px;font-family:var(--f-display);font-weight:500;font-size:.88rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-.btn.ghost{background:transparent;color:var(--blue)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-details.parts{font-size:.88rem}
-details.parts summary{cursor:pointer;color:var(--blue);font-family:var(--f-display);font-size:.82rem}
-.ptable{display:grid;gap:4px;margin-top:8px}
-.prow{display:grid;grid-template-columns:150px 54px 1fr;gap:10px;align-items:baseline}
-.prow b{font-variant-numeric:tabular-nums;font-family:var(--f-display)}
+.whypanel{margin-top:12px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:12px 14px}
+.whypanel table{width:100%;border-collapse:collapse;font-size:13px}
+.whypanel td{padding:5px 6px;border-top:1px solid var(--line-2);vertical-align:top}
+.whypanel tr:first-child td{border-top:0}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.whypanel .rule{color:var(--muted);font-size:12px;margin-top:8px}
 
-/* member 360 */
-.mhead{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center}
-.mhead .facts{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.9rem}
-.picker{display:flex;gap:6px;flex-wrap:wrap}
-.picker button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:.85rem}
-.picker button[aria-pressed="true"]{background:var(--navy);color:var(--surface);border-color:var(--navy)}
-.alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-.alert{border-radius:12px;padding:12px 14px;display:grid;gap:4px;border:1px solid var(--line);background:var(--surface)}
-.alert.danger{background:var(--red-bg);border-color:transparent}
-.alert.warn{background:var(--amber-bg);border-color:transparent}
-.alert .t{font-family:var(--f-display);font-weight:600}
-.alert.danger .t{color:var(--red)}.alert.warn .t{color:var(--amber)}
-.src{font-size:.75rem;color:var(--muted)}
-.grid360{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
-.timeline{display:grid;gap:0}
-.tl{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line)}
-.tl:last-child{border-bottom:0}
-.tl .when{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
-.st-red{color:var(--red);font-weight:600}.st-amber{color:var(--amber);font-weight:600}.st-green{color:var(--green);font-weight:600}
-.actions ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 18px}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:8px 12px;font-size:14px;color:var(--muted);cursor:pointer;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--blue)}
+.tabs button kbd{margin-left:6px}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 10px;font-weight:700}
+.section{margin-bottom:26px}
+.callout{border-left:5px solid var(--red);background:#fff;padding:12px 14px;margin-bottom:10px;border-radius:0 6px 6px 0;box-shadow:0 0 0 1px var(--line) inset}
+.callout.warn{border-left-color:#DC6803}
+.callout h4{margin:0 0 4px;font-size:15px}
+.callout p{margin:0;font-size:14px;color:#33415F}
+.src{font-size:12px;color:var(--faint);margin-top:6px}
+.srcrow{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.nu{background:none;border:0;padding:0;font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:2px;cursor:pointer;white-space:nowrap}
+.nu.flagged{color:var(--green);text-decoration:none;cursor:default}
+.override{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:13px;text-align:left}
+.override .btn{padding:4px 10px;font-size:13px;margin:6px 6px 0 0}
+.moved{background:#EAF1FF;color:var(--blue-d)}
+.window{font-size:13px;padding:8px 12px;border-radius:6px;background:#EAF1FF;color:var(--navy);margin-bottom:10px}
+.quiet{list-style:none;margin:0;padding:0}
+.quiet li{padding:8px 0;border-top:1px solid var(--line-2);font-size:14px}
+.quiet li:first-child{border-top:0}
+.quiet li b{font-weight:600}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line-2)}
+.steps li:first-child{border-top:0}
+.steps input{width:18px;height:18px;margin-top:2px;accent-color:var(--blue);flex:none}
+.steps label{cursor:pointer;font-size:14px}
+.steps .ai{font-size:11px;color:#5B3FD6;background:#F2EFFD;border-radius:3px;padding:0 5px;margin-left:6px;white-space:nowrap}
+.steps li.ticked label{color:var(--faint);text-decoration:line-through}
+.panel{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px}
+.panel+.panel{margin-top:14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.fresh{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.d-live{background:var(--f-live)}.d-recent{background:var(--f-recent)}.d-lag{background:var(--f-lag)}.d-stale{background:var(--f-stale)}
+table.data{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+table.data th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:9px 12px;background:#F8FAFD;border-bottom:1px solid var(--line)}
+table.data td{padding:10px 12px;border-top:1px solid var(--line-2);vertical-align:top}
+table.data tr:first-child td{border-top:0}
+.s-red{color:var(--red);font-weight:600}.s-amber{color:var(--amber);font-weight:600}.s-green{color:var(--green);font-weight:600}
+table.data select{border:1px solid var(--line);border-radius:5px;padding:3px 6px;font-size:13px;background:#fff}
+.note-intro{font-size:14px;color:var(--muted);margin:0 0 12px}
 
 /* call */
-.callgrid{display:grid;grid-template-columns:1fr 1.3fr;gap:16px}
-.num{display:grid;gap:2px;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
-.num.best{border:2px solid var(--blue);background:var(--sky)}
-.num.retired{opacity:.6}.num.retired .mono{text-decoration:line-through}
-.check{display:flex;gap:10px;align-items:flex-start}
-.check input{margin-top:4px;width:18px;height:18px;flex:none}
-.note-line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
-.note-line.ok{background:var(--green-bg);border-color:transparent}
-.note-line .txt[contenteditable="true"]{outline:1px dashed var(--blue);border-radius:4px;padding:2px}
-.mini{font-size:.78rem;padding:4px 10px;border-radius:8px}
-.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.field{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;gap:2px}
-.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));right:max(20px,env(safe-area-inset-right,0px));background:var(--navy);color:var(--surface);padding:12px 16px;border-radius:12px;font-family:var(--f-display);font-size:.9rem;max-width:340px;z-index:20}
-.foot{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.number{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:#fff}
+.number.best{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset}
+.number .n{font-weight:700;font-size:16px}
+.number.retired .n{text-decoration:line-through;color:var(--faint)}
+.number .conf{margin-left:auto;text-align:right;font-size:12px;color:var(--muted)}
+.meter{width:70px;height:5px;background:var(--line-2);border-radius:3px;margin-top:4px;margin-left:auto}
+.meter i{display:block;height:100%;background:var(--blue);border-radius:3px}
+.perm{padding:10px 12px;border-radius:6px;font-size:14px;margin:10px 0}
+.perm.ok{background:var(--green-bg);color:var(--green)}
+.perm.no{background:var(--red-bg);color:var(--red)}
+.outcomes{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 13px;font-size:14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:#B9C6DD}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.btn.primary:hover{background:var(--blue-d)}
+.btn[disabled]{background:#E4E9F2;border-color:#E4E9F2;color:#8592AD;cursor:not-allowed}
+.btn[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.nl{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:#fff}
+.nl.ok{background:var(--green-bg);border-color:#ABEFC6}
+.nl .txt{flex:1;font-size:14px;outline:none}
+.nl .txt[contenteditable="true"]{background:#fff;box-shadow:0 0 0 2px var(--sky);border-radius:4px;padding:2px 4px}
+.nl .acts{display:flex;gap:6px;flex:none}
+.nl .acts .btn{padding:4px 10px;font-size:13px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.field{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff}
+.field label{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.field input{width:100%;border:0;border-bottom:1px solid var(--line);padding:3px 0;font-weight:600;background:transparent}
+.field .by{font-size:11px;margin-top:4px}
+.by-ai{color:#5B3FD6}.by-maria{color:var(--amber)}.by-auto{color:var(--muted)}
+.savebar{display:flex;align-items:center;gap:14px;margin-top:16px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:8px}
+.savebar .left{font-size:13px;color:var(--muted)}
+.savebar .btn{margin-left:auto;white-space:nowrap}
 
-@media (max-width:860px){
-  .hero,.grid360,.callgrid,.split{grid-template-columns:1fr}
-  .pillars,.stats{grid-template-columns:1fr}
-  .qcard{grid-template-columns:32px 1fr}
-  .qact{grid-column:2;justify-items:start;grid-auto-flow:column}
-  .prow{grid-template-columns:120px 44px 1fr}
+/* misc */
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 14px 10px 16px;border-radius:8px;font-size:14px;display:flex;gap:14px;align-items:center;box-shadow:0 6px 24px rgba(11,31,77,.25);z-index:40}
+.toast[hidden]{display:none}
+.toast button{background:none;border:0;color:var(--sky);font-weight:600;cursor:pointer;padding:0}
+.foot{padding:12px 20px;color:var(--faint);font-size:12px;border-top:1px solid var(--line);background:var(--surface);display:flex;gap:16px;flex-wrap:wrap}
+dialog{border:0;border-radius:10px;padding:0;max-width:760px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(11,31,77,.3)}
+dialog::backdrop{background:rgba(11,31,77,.45)}
+.dlg{padding:22px 26px 24px}
+.dlg h2{margin:0 0 6px;font-size:22px}
+.dlg h3{margin-top:20px}
+.dlg p{margin:0 0 8px;font-size:14px}
+.dlg table{width:100%;border-collapse:collapse;font-size:13px}
+.dlg td{padding:6px 8px;border-top:1px solid var(--line-2);vertical-align:top}
+.dlg .close{float:right}
+.empty{padding:40px;color:var(--muted);text-align:center}
+.alt{padding:20px 24px 40px;max-width:1240px}
+.alt h2{margin:0 0 4px;font-size:22px}
+.alt .lead{color:var(--muted);margin:0 0 18px;font-size:14px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+.tgroup{margin-bottom:22px}
+.tgroup h3 span{font-weight:400;text-transform:none;letter-spacing:0}
+.task{display:grid;grid-template-columns:22px 1fr auto;gap:4px 12px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;align-items:start}
+.task input{width:18px;height:18px;margin-top:2px;accent-color:var(--blue)}
+.task .tt{font-size:14px}
+.task .tm{grid-column:2/4;font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.task.done .tt{color:var(--faint);text-decoration:line-through}
+.task .due{font-size:12px;font-weight:600;white-space:nowrap}
+.due.hot{color:var(--red)}
+.src-tag{font-size:11px;border-radius:3px;padding:0 6px;background:#F1F4F9;color:var(--muted)}
+.src-tag.auto{background:#EAF1FF;color:var(--blue-d)}.src-tag.sug{background:#F2EFFD;color:#5B3FD6}.src-tag.you{background:var(--green-bg);color:var(--green)}
+.task .tools{display:flex;gap:10px;margin-left:auto}
+.task .tools button{background:none;border:0;padding:0;font-size:12px;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.task .tools button.rm{color:var(--red)}
+.task.editing{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset}
+.task .edit{grid-column:2/4;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.task .edit input{flex:1;min-width:220px;border:1px solid var(--line);border-radius:6px;padding:6px 9px}
+.task .edit select{border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:#fff}
+.task .edit .btn{padding:5px 11px;font-size:13px}
+.task .why-rm{grid-column:2/4;font-size:13px;background:#FFF7F6;border-radius:6px;padding:8px 10px}
+.task .why-rm .btn{padding:4px 10px;font-size:13px;margin:6px 6px 0 0}
+.task.removed .tt{color:var(--faint);text-decoration:line-through}
+.field .chg{background:none;border:0;padding:0;font-size:11px;color:var(--blue);cursor:pointer;text-decoration:underline;margin-left:6px}
+.by-you{color:var(--green)}
+.addtask{display:flex;gap:8px;margin-bottom:18px}
+.addtask input{flex:1;border:1px solid var(--line);border-radius:6px;padding:7px 10px;background:#fff}
+.addtask select{border:1px solid var(--line);border-radius:6px;padding:0 8px;background:#fff}
+.alertlist li{display:flex;gap:10px}
+table.data tr.clickable{cursor:pointer}
+table.data tr.clickable:hover td{background:#F8FAFE}
+table.data tr.sample td:first-child{box-shadow:inset 3px 0 0 var(--blue)}
+.ctools{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.ctools .count{margin-left:auto;font-size:13px;color:var(--muted)}
+.badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--sky);color:var(--navy);font-size:11px;font-weight:700;line-height:18px;text-align:center;margin-left:6px}
+@media (max-width:980px){.cols{grid-template-columns:1fr}}
+@media (max-width:980px){
+  .work{grid-template-columns:1fr}
+  .listpane{border-right:0;border-bottom:1px solid var(--line)}
+  .grid2{grid-template-columns:1fr}
+  .search input{width:160px}
+  .topnav,.who span{display:none}
+  .daystats{margin-left:0;flex-wrap:wrap}
+  .fields{grid-template-columns:1fr}
 }
-@media (prefers-reduced-motion:no-preference){.qcard,.alert{transition:transform .15s}.qcard:hover{transform:translateY(-1px)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-
+</head>
+<body>
+<a class="skip" href="#detail">Skip to member</a>
 <header class="top">
-  <div class="wrap">
-    <a class="logo" href="#overview" aria-label="CareRounds home">
-      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="14" fill="#1F5FE0"/><path d="M15 6a9 9 0 1 0 9 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M15 10v5l3.5 2.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="15" r="2.2" fill="#9DD6FF"/></svg>
-      CareRounds
-    </a>
-    <span class="demo-tag">Prototype · fictional data</span>
-    <nav class="nav" aria-label="Main">
-      <a href="#overview" data-v="overview">Overview</a>
-      <a href="#my-day" data-v="my-day">My Day</a>
-      <a href="#member" data-v="member">Member 360</a>
-      <a href="#call" data-v="call">Call &amp; Document</a>
-    </nav>
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="13" fill="#1F5FE0"/><path d="M5 14h4l2-5 4 9 2-4h4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    CareRounds
   </div>
+  <nav class="topnav" aria-label="Main">
+    <a href="#worklist" data-view="worklist">My Day</a>
+    <a href="#tasks" data-view="tasks">Tasks<span class="badge" id="taskBadge"></span></a>
+    <a href="#caseload" data-view="caseload">Caseload</a>
+  </nav>
+  <div class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#9FB2DD" stroke-width="2"/><path d="M15 15l6 6" stroke="#9FB2DD" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="q" type="search" placeholder="Search name or member ID…" aria-label="Search members" autocomplete="off" spellcheck="false">
+    <kbd>/</kbd>
+  </div>
+  <div class="who"><span>Maria A., RN</span><div class="avatar" aria-hidden="true">MA</div></div>
 </header>
 
-<main class="wrap">
-  <!-- OVERVIEW -->
-  <section class="view" id="v-overview">
-    <div class="hero">
-      <div>
-        <div class="label" style="color:#9DD6FF">Case Management Workbench for health plans</div>
-        <h1 style="margin-top:8px">Your rounds, ready before you are.</h1>
-        <p>CareRounds pulls each member's hospital alerts, pharmacy fills, claims, labs and notes into one trusted view. It ranks who needs the nurse today and drafts the paperwork, so case managers spend their day talking to members instead of hunting for data.</p>
-        <a class="cta" href="#my-day">Open Maria's Monday</a>
-      </div>
-      <div class="hero-card" aria-label="Example of the morning queue">
-        <div class="label">Mon 9 Nov · 8:00 am</div>
-        <div class="row"><span class="pill b-now">🔴 Call now</span><b>Harold B.</b><span class="muted">Follow-up call due today</span></div>
-        <div class="row"><span class="pill b-today">🟠 Call today</span><b>Darnell H.</b><span class="muted">3rd ER visit in 8 weeks</span></div>
-        <div class="row"><span class="pill b-today">🟠 Call today</span><b>Eleanor P.</b><span class="muted">Unsafe medicine mix</span></div>
-        <div class="row"><span class="pill b-week">🟢 This week</span><b>Tanya W.</b><span class="muted">Now in a shelter</span></div>
-      </div>
-    </div>
+<section class="day" aria-label="Today">
+  <div>
+    <h1>Good morning, Maria</h1>
+    <div class="sub">Monday 9 November · 8:00 am · 6 new hospital alerts since Friday · <button class="linkbtn" id="aboutBtn">How the ranking works</button></div>
+  </div>
+  <div class="daystats" id="daystats"></div>
+</section>
 
-    <div class="pillars">
-      <div class="pillar"><span class="k">SEE</span><h3>One trusted picture</h3><p class="muted">Every fact shows where it came from and how old it is. When two systems disagree, CareRounds shows both side by side instead of hiding the conflict.</p></div>
-      <div class="pillar"><span class="k">DECIDE</span><h3>Who needs me today</h3><p class="muted">The Today Score ranks members on six things a nurse already checks: deadlines, medicine danger, hospital history, illness, mental health and life barriers. Each one is spelled out in plain words.</p></div>
-      <div class="pillar"><span class="k">ACT</span><h3>Less dialing, less typing</h3><p class="muted">It suggests the number most likely to work and the best time to call. During the call it drafts the note and fills the forms; the nurse confirms every line before anything is saved.</p></div>
-    </div>
-
-    <div class="stats">
-      <div class="stat"><div class="n">6–7 → 1</div><p class="muted">screens to understand one member (brief: claims, auth, pharmacy, HIE, notes, spreadsheet)</p></div>
-      <div class="stat"><div class="n">~15% → 30%</div><p class="muted">of the day spent talking to members: our estimate today, and the pilot target</p></div>
-      <div class="stat"><div class="n">2 days</div><p class="muted">deadline for the first call after a hospital discharge, tracked automatically</p></div>
-    </div>
-
-    <div class="split">
-      <div class="panel">
-        <h2>What the AI does, and what Maria does</h2>
-        <div class="tablebox" style="border:0">
-          <table>
-            <thead><tr><th>CareRounds does automatically</th><th>Maria confirms or decides</th></tr></thead>
-            <tbody>
-              <tr><td>Ranks the queue and explains why</td><td>Who she actually calls first (can override)</td></tr>
-              <tr><td>Finds conflicts between medicine lists</td><td>Which list is right</td></tr>
-              <tr><td>Reads the faxed discharge summary</td><td>Each extracted medicine and date</td></tr>
-              <tr><td>Suggests the best number and time</td><td>Marks a number wrong or right</td></tr>
-              <tr><td>Drafts the call note and form fields</td><td>Every line, before signing</td></tr>
-              <tr><td>Never diagnoses, sends or closes a case</td><td>All clinical judgment</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>How fresh is this?</h2>
-        <p class="muted">Every fact carries a dot, so Maria knows at a glance whether to trust it or re-check it.</p>
-        <div style="display:grid;gap:8px">
-          <div class="fresh" style="font-size:.9rem;color:var(--ink)"><span class="dot d-live"></span><b>Live</b>&nbsp;under 1 day: hospital alerts, pharmacy fills, call log</div>
-          <div class="fresh" style="font-size:.9rem;color:var(--ink)"><span class="dot d-recent"></span><b>Recent</b>&nbsp;1–14 days: labs, clinical records, discharge summaries</div>
-          <div class="fresh" style="font-size:.9rem;color:var(--ink)"><span class="dot d-lag"></span><b>Lagging</b>&nbsp;15–90 days: medical claims, care gaps</div>
-          <div class="fresh" style="font-size:.9rem;color:var(--ink)"><span class="dot d-stale"></span><b>Stale</b>&nbsp;over 90 days: health questionnaires, phone on file</div>
-        </div>
-        <p class="src">Ages are counted from Monday 9 Nov 2026, 8:00 am.</p>
-      </div>
-    </div>
-    <p class="foot">Prototype for the HiLabs APM Product Case 2026–27. All members, numbers, clinicians, hospitals and agencies are fictional. No real patient data.</p>
-  </section>
-
-  <!-- MY DAY -->
-  <section class="view" id="v-my-day" hidden>
-    <div class="dayhead">
-      <div>
-        <div class="label">Monday 9 November 2026 · 8:00 am</div>
-        <h1 style="font-size:1.8rem;margin-top:4px">Good morning, Maria</h1>
-        <p class="muted">48 active cases · 6 new hospital alerts since Friday · showing the 5 sample members</p>
-      </div>
-      <div class="counts" id="counts"></div>
-    </div>
-    <div class="panel" style="gap:8px">
-      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">
-        <h3>Today Score: what each colour in the bar means</h3>
-        <span class="muted" style="font-size:.85rem">100 points · safety rules always win over the score</span>
-      </div>
-      <div class="legend">
-        <span><i class="sw" style="background:var(--s-deadline)"></i>⏰ Deadline (30)</span>
-        <span><i class="sw" style="background:var(--s-danger)"></i>💊 Danger now (25)</span>
-        <span><i class="sw" style="background:var(--s-history)"></i>🏥 Hospital history (20)</span>
-        <span><i class="sw" style="background:var(--s-sick)"></i>🩺 How sick (10)</span>
-        <span><i class="sw" style="background:var(--s-mind)"></i>🧠 Mental health (10)</span>
-        <span><i class="sw" style="background:var(--s-life)"></i>🏠 Life barriers (5)</span>
-      </div>
-    </div>
-    <div class="queue" id="queue"></div>
-  </section>
-
-  <!-- MEMBER 360 -->
-  <section class="view" id="v-member" hidden>
-    <div class="picker" id="picker1" role="group" aria-label="Choose member"></div>
-    <div id="m360"></div>
-  </section>
-
-  <!-- CALL -->
-  <section class="view" id="v-call" hidden>
-    <div class="picker" id="picker2" role="group" aria-label="Choose member"></div>
-    <div id="callv"></div>
-  </section>
+<main class="work" id="workView">
+  <aside class="listpane" aria-label="My Day worklist">
+    <div class="filters" role="group" aria-label="Filter by when to call" id="filters"></div>
+    <ul class="list" id="list" role="listbox" aria-label="Members to work today"></ul>
+    <div class="more"><b>43 more cases</b> with nothing due this week. <a href="#caseload" data-view="caseload">See the full caseload</a>. They move up here when something changes.</div>
+    <div class="keys"><kbd>J</kbd> <kbd>K</kbd> next / previous · <kbd>1</kbd>–<kbd>4</kbd> sections · <kbd>/</kbd> search</div>
+  </aside>
+  <section class="detail" id="detail" tabindex="-1" aria-live="polite"></section>
 </main>
-<div class="toast" id="toast" hidden></div>
+<main class="alt" id="altView" hidden tabindex="-1"></main>
+
+<footer class="foot">
+  <span>CareRounds prototype · same 5 members as the case deck, not real patients · as of Mon 9 Nov 2026, 8:00 am</span>
+  <span>Freshness: <span class="fresh"><i class="dot d-live"></i>Live &lt; 1 day</span> · <span class="fresh"><i class="dot d-recent"></i>Recent 1–14 days</span> · <span class="fresh"><i class="dot d-lag"></i>Lagging 15–90 days</span> · <span class="fresh"><i class="dot d-stale"></i>Stale &gt; 90 days</span></span>
+</footer>
+
+<dialog id="about" aria-labelledby="aboutTitle">
+  <div class="dlg">
+    <button class="btn close" data-close>Close</button>
+    <h2 id="aboutTitle">How CareRounds ranks Maria's day</h2>
+    <p>Maria has 48 cases spread over 6–7 systems. Today only about 15% of her day is spent talking to members. CareRounds puts the facts in one place, ranks who needs her today, and drafts the paperwork, so she can get that to 30%.</p>
+    <h3>Today Score: 100 points, 6 parts</h3>
+    <table>
+      <tr><td><span class="sw" style="background:var(--p1)"></span><b>Deadline</b> · 30</td><td>Due today 30 · within 2 days 21 · within 7 days 12. Early follow-up after discharge cuts readmissions by about 15%.</td></tr>
+      <tr><td><span class="sw" style="background:var(--p2)"></span><b>Danger now</b> · 25</td><td>10 per unsafe medicine mix, key medicine not picked up, or bad potassium. 21% of readmissions are drug-related.</td></tr>
+      <tr><td><span class="sw" style="background:var(--p3)"></span><b>Hospital history</b> · 20</td><td>2–5 stays = 5 · 6+ = 12 · +2 per ER visit. Same cut-offs as the LACE and HOSPITAL scores.</td></tr>
+      <tr><td><span class="sw" style="background:var(--p4)"></span><b>How sick</b> · 10</td><td>+1 per serious condition or lab off target.</td></tr>
+      <tr><td><span class="sw" style="background:var(--p5)"></span><b>Mental health</b> · 10</td><td>Depression score 15–19 = 7 · 20+ = 10.</td></tr>
+      <tr><td><span class="sw" style="background:var(--p6)"></span><b>Life barriers</b> · 5</td><td>+1 per blocked need: home, food, ride, cost of medicine.</td></tr>
+    </table>
+    <h3>Safety rules beat the score</h3>
+    <p><b>Call now</b> (red): 50+ points, or self-harm answer "yes". <b>Call today</b> (amber): 25–49, a sure danger flag, or a deadline within 2 days. <b>This week</b> (green): everything else. How easy someone is to reach is never scored.</p>
+    <h3>Who does what</h3>
+    <p>CareRounds ranks, finds conflicts, reads faxes, suggests the best number and drafts the note. Maria decides who to call, which medicine list is right, and confirms every line before anything is saved. It never diagnoses, sends or closes a case.</p>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" hidden role="status"><span id="toastText"></span><button id="toastAct" hidden></button></div>
 
 <script>
-const PARTS=[["⏰ Deadline","--s-deadline",30],["💊 Danger now","--s-danger",25],["🏥 Hospital history","--s-history",20],["🩺 How sick","--s-sick",10],["🧠 Mental health","--s-mind",10],["🏠 Life barriers","--s-life",5]];
 const ASOF=new Date(2026,10,9,8,0);
 const F=(y,m,d)=>new Date(y,m-1,d);
-function fresh(dt){const days=(ASOF-dt)/864e5;const [c,t]=days<1?["d-live","Live"]:days<=14?["d-recent","Recent"]:days<=90?["d-lag","Lagging"]:["d-stale","Stale"];const age=days<1?"today":Math.round(days)+" d old";return `<span class="fresh"><span class="dot ${c}"></span>${t} · ${age}</span>`}
-const BAND={now:["b-now","🔴 Call now"],today:["b-today","🟠 Call today"],week:["b-week","🟢 This week"]};
-
 const M=[
 {id:"harold",mid:"M-20117",name:"Harold Brennan",short:"Harold B.",age:78,sex:"M",plan:"Dual-eligible plan (D-SNP)",lang:"English",city:"Tampa, FL",pcp:"Dr. L. Okafor",band:"now",
  parts:[30,25,7,3,0,0],
@@ -365,10 +398,10 @@ const M=[
  alerts:[
   ["warn","Depression score 17","Moderately severe. Self-harm question answered 'not at all', so behavioral-health follow-up this week, not a crisis call.","GP record, 22 Oct"],
   ["warn","Housing changed: now in a shelter","The housing screen from February says 'stable'. A 28 Oct note says she has been at a shelter since mid-October.","Case note 28 Oct · Screen Feb 2026"],
-  ["info","🔒 Restricted record: substance-use treatment","A treatment-program record exists. It stays hidden until Tanya gives consent (federal Part 2 rule). Ask on the call.","Treatment program"],
+  ["info","Restricted record: substance-use treatment","A treatment-program record exists. It stays hidden until Tanya gives consent (federal Part 2 rule). Ask on the call.","Treatment program"],
   ["info","Alcohol ER follow-up still open","Follow-up after the 25 Oct ER visit is due by 24 Nov.","Quality measure (FUA)"]],
  medHead:["Medicine","Prescriber","Pharmacy","GP record","Status"],
- meds:[["Sertraline 100 mg (antidepressant)","Dr. Brooks","Filled 10 Oct","Listed","green|OK"],["Amlodipine 2.5 mg","Dr. Brooks","On time","Listed","green|OK"],["🔒 1 sensitive medicine","—","Hidden","—","amber|Consent needed"]],
+ meds:[["Sertraline 100 mg (antidepressant)","Dr. Brooks","Filled 10 Oct","Listed","green|OK"],["Amlodipine 2.5 mg","Dr. Brooks","On time","Listed","green|OK"],["1 restricted medicine","—","Hidden","—","amber|Consent needed"]],
  timeline:[[F(2026,10,28),"Social worker reached her: staying at Harbor Light Shelter since ~15 Oct","Case note"],[F(2026,10,25),"ER visit: alcohol intoxication and fall; discharged to shelter","HIE"],[F(2026,10,22),"Depression score 17, anxiety score 12","GP record"],[F(2026,10,10),"Sertraline picked up","Pharmacy"],[F(2026,2,12),"Housing screen: 'stable' (now wrong)","Screening"]],
  labs:[["Depression score (PHQ-9)","17 of 27","moderately severe · self-harm: no",F(2026,10,22),"amber"],["Anxiety score (GAD-7)","12 of 21","moderate",F(2026,10,22),""]],
  life:[["Staying at a shelter since mid-October",F(2026,10,28)],["Prepaid phone often runs out of minutes",F(2026,10,28)],["Food: 'never a problem' (likely outdated)",F(2026,2,12)]],
@@ -401,99 +434,247 @@ const M=[
  fields:[["Language used","Spanish","auto"],["Insulin source","Cash, over the counter","ai"],["Barrier","Cost","ai"],["Care gaps closed","Eye exam booked","maria"]]}
 ];
 
+const PARTS=[["Deadline","--p1",30],["Danger now","--p2",25],["Hospital history","--p3",20],["How sick","--p4",10],["Mental health","--p5",10],["Life barriers","--p6",5]];
+const BAND={now:["t-now","Call now"],today:["t-today","Call today"],week:["t-week","This week"]};
+const DUE={harold:["Call due today",true],darnell:["ER follow-up by Fri 13 Nov",false],eleanor:["Safety flag: message GP today",true],tanya:["BH follow-up by 24 Nov",false],rosa:["No deadline",false]};
+const BRIEF={harold:"Home from hospital 4 days ago. New heart medicines not picked up, and his old list has an unsafe mix.",darnell:"3rd ER visit in 8 weeks. His COPD inhaler hasn't been picked up since June, and his phone number is dead.",eleanor:"Two blood-pressure medicines that shouldn't be combined, potassium 5.4, and her daughter is struggling.",tanya:"Depression score 17 (no self-harm thoughts), an ER visit for alcohol, and she now lives in a shelter.",rosa:"Insulin may not have been picked up for ~45 days and her A1c is 9.1. She prefers Spanish."};
+const LASTC={harold:["5 Nov","new case at discharge"],darnell:["30 Oct","call failed: disconnected"],eleanor:["2 Nov","spoke with daughter"],tanya:["28 Oct","reached by phone"],rosa:["22 Oct","asked to call back"]};
+const NEXTR={harold:["Today, 9 Nov","2-day discharge call"],darnell:["Fri 13 Nov","ER follow-up visit"],eleanor:["Today, 9 Nov","safety flag: message GP"],tanya:["Tue 24 Nov","BH follow-up after ER"],rosa:["Fri 13 Nov","insulin check, in Spanish"]};
 const $=s=>document.querySelector(s);
-const esc=s=>String(s);
-function bar(p){return `<div class="bar" role="img" aria-label="Score parts: ${p.map((v,i)=>PARTS[i][0]+' '+v).join(', ')}">${p.map((v,i)=>v?`<i style="width:${v}%;background:var(${PARTS[i][1]})"></i>`:"").join("")}</div>`}
-function status(s){const [c,t]=s.split("|");return `<span class="st-${c}">${t}</span>`}
+const score=m=>m.parts.reduce((a,b)=>a+b,0);
+function fresh(dt){const d=(ASOF-dt)/864e5;const[c,t]=d<1?["d-live","Live"]:d<=14?["d-recent","Recent"]:d<=90?["d-lag","Lagging"]:["d-stale","Stale"];const age=d<1?"today":Math.round(d)+" days old";return `<span class="fresh"><i class="dot ${c}" aria-hidden="true"></i>${t} · ${age}</span>`}
+const fmt=d=>d.getDate()+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 
-function renderDay(){
-  const c={now:0,today:0,week:0};M.forEach(m=>c[m.band]++);
-  $("#counts").innerHTML=`<div class="count"><div class="n" style="color:var(--red)">${c.now}</div><div class="muted">🔴 Call now</div></div><div class="count"><div class="n" style="color:var(--amber)">${c.today}</div><div class="muted">🟠 Call today</div></div><div class="count"><div class="n" style="color:var(--green)">${c.week}</div><div class="muted">🟢 This week</div></div>`;
-  $("#queue").innerHTML=M.map((m,i)=>{const tot=m.parts.reduce((a,b)=>a+b,0);const [bc,bt]=BAND[m.band];return `
-  <article class="qcard ${m.band}">
-    <div class="rank">${i+1}</div>
-    <div class="qmain">
-      <div class="qtitle"><h3>${m.name}</h3><span class="muted">${m.age}${m.sex} · ${m.plan} · ${m.lang}</span><span class="pill ${bc}">${bt}</span></div>
-      <p class="why">${m.why}</p>
-      <div class="scoreline"><span class="score">${tot}<small> / 100</small></span>${bar(m.parts)}</div>
-      <div class="chips">${m.chips.map(x=>`<span class="chip">${x}</span>`).join("")}</div>
-      <details class="parts"><summary>Why ${tot} points?</summary><div class="ptable">${m.parts.map((v,k)=>`<div class="prow"><span>${PARTS[k][0]}</span><b>${v}/${PARTS[k][2]}</b><span class="muted">${m.partWhy[k]}</span></div>`).join("")}</div></details>
-    </div>
-    <div class="qact"><a class="btn" href="#member" data-open="${m.id}">Open member</a><a class="btn ghost" href="#call" data-open="${m.id}">Call</a></div>
-  </article>`}).join("");
+/* state */
+const S={tEdit:null,tRm:null,fEdit:{},moved:[],ovOpen:false,attempts:{},flagged:{},view:"worklist",cfilter:"all",cq:"",open:null,sel:"harold",tab:"summary",filter:"all",q:"",why:false,status:{},ticks:{},confirmed:{},fieldVals:{},meds:{},outcome:{}};
+M.forEach(m=>{S.status[m.id]="To call";S.ticks[m.id]=new Set();S.confirmed[m.id]=new Set();S.fieldVals[m.id]={};S.meds[m.id]={}});
+function fromHash(){const[h,t]=location.hash.slice(1).split("/");if(h==="tasks"||h==="caseload"){S.view=h;return}if(h==="worklist")S.view="worklist";if(M.some(m=>m.id===h)){S.sel=h;S.view="worklist"}if(["summary","medicines","history","call"].includes(t))S.tab=t}
+function toHash(){try{history.replaceState(null,"",S.view==="worklist"?`#${S.sel}/${S.tab}`:`#${S.view}`)}catch(e){}}
+/* tasks */
+let TID=1;const T=[];
+function addTask(mem,text,due,dueRank,src,kind){T.push({id:TID++,mem,text,due,dueRank,src,kind,done:false});}
+addTask("harold","2-day discharge call: reach Harold","Today",0,"Auto-created · hospital alert 5 Nov","auto");
+addTask("eleanor","Message Dr. Patel: lisinopril + losartan with potassium 5.4","Today",0,"Auto-created · safety flag","auto");
+addTask("eleanor","Check the authorized-representative form came back","Wed 11 Nov",2,"You · 2 Nov","you");
+addTask("harold","Cardiology visit booked (7-day rule)","Thu 12 Nov",3,"Auto-created · discharge 5 Nov","auto");
+addTask("darnell","GP visit after ER (7-day rule)","Fri 13 Nov",4,"Auto-created · ER alert 6 Nov","auto");
+addTask("rosa","Reassign to a Spanish-speaking case manager","This week",5,"Auto-created · language mismatch","auto");
+addTask("tanya","Behavioral-health follow-up after alcohol ER visit","Tue 24 Nov",9,"Auto-created · quality measure (FUA)","auto");
+const openTasks=()=>T.filter(x=>!x.done&&!x.removed).length;
+const DUEOPTS=[["Today",0],["Tue 10 Nov",1],["Wed 11 Nov",2],["Thu 12 Nov",3],["Fri 13 Nov",4],["This week",5],["Tue 17 Nov",8],["Tue 24 Nov",15]];
+/* caseload: 43 routine cases + 5 worked examples */
+const FN=["James","Mary","Robert","Patricia","Michael","Linda","William","Barbara","David","Susan","Richard","Jessica","Joseph","Karen","Thomas","Nancy","Charles","Betty","Daniel","Sandra","Matthew","Ashley","Anthony","Dorothy","Mark","Kimberly","Donald","Emily","Steven","Donna","Paul","Carol","Andrew","Ruth","Joshua","Sharon","Kenneth","Michelle","Kevin","Laura","Brian","Helen","George"];
+const LN=["Alvarez","Bennett","Carter","Diaz","Ellis","Foster","Garcia","Hughes","Ingram","Jenkins","Kim","Lopez","Morgan","Nguyen","Owens","Perez","Quinn","Reyes","Sanders","Torres","Underwood","Vasquez","Walker","Xu","Young","Zimmerman","Baker","Coleman","Dunn","Evans","Fisher","Gray","Hayes","Irwin","James","Knight","Lewis","Mills","Nash","Ortiz","Price","Rivera","Stone"];
+const ALERT_OTHERS={3:"Admitted Sat 7 Nov, still in hospital · call after discharge",11:"Admitted Sun 8 Nov, still in hospital · call after discharge",19:"ER visit Sat 7 Nov, sent home · seen by weekend on-call nurse",27:"Observation stay Fri 6 Nov, home Sat · on-call nurse called Sat"};
+const C=FN.map((f,i)=>{const s=(i*37+11)%7;const prog=i%3===0?"Post-discharge":"Complex care";const last=new Date(2026,9,12+((i*5)%26));const next=new Date(2026,10,17+((i*3)%25));
+  return {id:"c"+i,name:f+" "+LN[i],age:60+((i*7)%30),mid:"M-"+(70000+i*137),prog,score:s,last,next,alert:ALERT_OTHERS[i]||null}});
+function caseRows(){
+  const worked=M.map(m=>({id:m.id,name:m.name,age:m.age,mid:m.mid,prog:m.id==="harold"?"Post-discharge":"Complex care",score:score(m),band:m.band,sample:true}));
+  return worked.concat(C.map(c=>({...c,band:null})));
 }
-let cur="harold";
-function picker(el){el.innerHTML=M.map(m=>`<button type="button" data-pick="${m.id}" aria-pressed="${m.id===cur}">${m.short} <span class="dot ${m.band==='now'?'d-stale':m.band==='today'?'d-lag':'d-live'}" style="margin-left:4px"></span></button>`).join("")}
-function render360(){
-  const m=M.find(x=>x.id===cur);const tot=m.parts.reduce((a,b)=>a+b,0);const [bc,bt]=BAND[m.band];
-  $("#m360").innerHTML=`
-  <div class="view">
-    <div class="mhead">
-      <div><div class="label">${m.mid}</div><h2 style="font-size:1.5rem">${m.name}, ${m.age}</h2></div>
-      <div class="facts"><span><span class="muted">Plan</span> ${m.plan}</span><span><span class="muted">Language</span> ${m.lang}</span><span><span class="muted">GP</span> ${m.pcp}</span><span><span class="muted">Lives in</span> ${m.city}</span></div>
-      <div style="margin-left:auto;display:grid;gap:6px;justify-items:end"><span class="pill ${bc}">${bt} · ${tot}/100</span>${bar(m.parts)}</div>
-    </div>
-    <div><div class="label" style="margin-bottom:8px">Needs your attention: top of the screen on purpose</div>
-    <div class="alerts">${m.alerts.map(a=>`<div class="alert ${a[0]}"><span class="t">${a[1]}</span><span>${a[2]}</span><span class="src">Source: ${a[3]}</span></div>`).join("")}</div></div>
-    <div class="grid360">
-      <div class="view" style="gap:16px">
-        <div class="panel"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><h3>Medicines: every source side by side</h3><span class="ai-tag">AI found the conflicts · you decide</span></div>
-          <div class="tablebox" style="border:0"><table><thead><tr>${m.medHead.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${m.meds.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${status(r[4])}</td></tr>`).join("")}</tbody></table></div></div>
-        <div class="panel"><h3>What happened, newest first</h3><div class="timeline">${m.timeline.map(t=>`<div class="tl"><span class="when">${t[0].toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span><div><div>${t[1]}</div><div style="display:flex;gap:10px;flex-wrap:wrap"><span class="src">${t[2]}</span>${fresh(t[0])}</div></div></div>`).join("")}</div></div>
-      </div>
-      <div class="view" style="gap:16px">
-        <div class="panel actions"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><h3>Next best actions</h3><span class="ai-tag">AI suggested</span></div><ol>${m.actions.map(a=>`<li>${a}</li>`).join("")}</ol><a class="btn" href="#call" data-open="${m.id}" style="justify-self:start">Start call</a></div>
-        <div class="panel"><h3>Labs and scores</h3>${m.labs.map(l=>`<div style="display:grid;gap:2px;padding-bottom:8px;border-bottom:1px dashed var(--line)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span>${l[0]}</span><b class="${l[4]?'st-'+l[4]:''}">${l[1]}</b></div><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="src">${l[2]}</span>${fresh(l[3])}</div></div>`).join("")}</div>
-        <div class="panel"><h3>Life and support</h3>${m.life.map(l=>`<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span>${l[0]}</span>${fresh(l[1])}</div>`).join("")}<p class="src">Stale items get a 're-check on the next call' prompt.</p></div>
-      </div>
-    </div>
-  </div>`;
+
+/* worklist */
+function ordered(){return [...M].sort((a,b)=>{const ia=S.moved.indexOf(a.id),ib=S.moved.indexOf(b.id);if(ia>-1||ib>-1)return (ia>-1?ia:99)-(ib>-1?ib:99);return 0})}
+function visible(){return ordered().filter(m=>(S.filter==="all"||m.band===S.filter)&&(!S.q||(m.name+" "+m.mid).toLowerCase().includes(S.q.toLowerCase())))}
+function renderStats(){
+  const done=M.filter(m=>S.status[m.id]==="Done").length;
+  const c=b=>M.filter(m=>m.band===b).length;
+  $("#daystats").innerHTML=`<div class="stat red"><b class="num">${c("now")}</b>Call now</div><div class="stat amber"><b class="num">${c("today")}</b>Call today</div><div class="stat green"><b class="num">${c("week")}</b>This week</div><div class="stat progress"><b class="num">${done} of ${M.length}</b>done today<div class="track"><div class="fill" style="width:${done/M.length*100}%"></div></div></div>`;
 }
-let confirmed=new Set();
-function renderCall(){
-  const m=M.find(x=>x.id===cur);confirmed=new Set();
-  const perm=m.permission[0]==="ok"?`<span class="st-green">✔ ${m.permission[1]}</span>`:`<span class="st-red">✖ ${m.permission[1]}</span>`;
-  $("#callv").innerHTML=`
-  <div class="callgrid">
-    <div class="view" style="gap:16px">
-      <div class="panel"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><h3>📞 How to reach ${m.short}</h3><span class="ai-tag">AI ranked the numbers</span></div>
-        ${m.numbers.map(n=>`<div class="num ${n.best?'best':''} ${n.retired?'retired':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="mono" style="font-size:1rem">${n.n}</span><span class="label">${n.best?'Try first':n.retired?'Retired':'Backup'}${n.conf!=null&&!n.retired?' · '+n.conf+'% likely to reach':''}</span></div><span>${n.who}</span><span class="src">${n.src}${n.reason?' · '+n.reason:''}${n.note?' · '+n.note:''}</span></div>`).join("")}
-        <div><div class="label">Best time</div><p>${m.bestTime}</p></div>
-        <div><div class="label">Language</div><p>${m.lang}</p></div>
-        <div><div class="label">Who may we speak to?</div><p>${perm}</p></div>
-      </div>
-      <div class="panel"><h3>Call checklist</h3><p class="src">Built from this member's open issues. Tick as you go.</p>${m.checklist.map((c,i)=>`<label class="check" for="ck-${m.id}-${i}"><input type="checkbox" id="ck-${m.id}-${i}"><span>${c}</span></label>`).join("")}</div>
-    </div>
-    <div class="view" style="gap:16px">
-      <div class="panel"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><h3>Call note: drafted for you</h3><span class="ai-tag">AI draft · not saved until you confirm</span></div>
-        <p class="src">Example of the note after the call. Confirm each line, or edit it first. Nothing is saved until every line is confirmed and you sign.</p>
-        <div style="display:grid;gap:8px" id="notelines">${m.note.map((n,i)=>`<div class="note-line" data-i="${i}"><span class="txt">${n}</span><span style="display:flex;gap:6px"><button type="button" class="btn ghost mini" data-edit="${i}">Edit</button><button type="button" class="btn mini" data-ok="${i}">Confirm</button></span></div>`).join("")}</div>
-      </div>
-      <div class="panel"><h3>Assessment fields: pre-filled</h3><div class="fields">${m.fields.map(f=>`<div class="field"><span class="label">${f[0]}</span><span>${f[1]}</span>${f[2]==='ai'?'<span class="ai-tag" style="justify-self:start">AI filled · check</span>':f[2]==='auto'?'<span class="src">Filled from records</span>':'<span class="src st-amber">Needs your answer</span>'}</div>`).join("")}</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button type="button" class="btn" id="sign" disabled>Sign and save</button><span class="src" id="signhint">${m.note.length} lines left to confirm</span></div>
-      </div>
-    </div>
-  </div>`;
+function renderFilters(){
+  const f=[["all","All 5"],["now","Call now"],["today","Call today"],["week","This week"]];
+  $("#filters").innerHTML=f.map(([k,l])=>`<button class="chip" data-f="${k}" aria-pressed="${S.filter===k}">${l}</button>`).join("");
 }
-function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,3200)}
+function stCls(s){return s==="Done"?"done":s==="To call"?"":"tried"}
+function renderList(){
+  const v=visible();
+  $("#list").innerHTML=v.length?v.map((m,i)=>{const[bc,bl]=BAND[m.band];const[dl,hot]=DUE[m.id];const st=S.status[m.id];
+    return `<li class="row ${st==="Done"?"done":""}" role="option" data-id="${m.id}" aria-selected="${m.id===S.sel}" tabindex="${m.id===S.sel?0:-1}">
+      <span class="stripe" style="background:var(${m.band==="now"?"--red":m.band==="today"?"--amber":"--green"})"></span>
+      <div><div class="name">${esc(m.name)}<small>${m.age} · ${m.mid}</small></div></div>
+      <div class="score num">${score(m)}<small>of 100</small></div>
+      <div class="why" title="${esc(m.why)}">${esc(BRIEF[m.id])}</div>
+      <div class="meta"><span class="tag ${bc}"><i></i>${bl}</span><span class="tag t-due ${hot?"hot":""}">${dl}</span>${m.lang!=="English"?`<span class="tag t-plain">${m.lang}</span>`:""}${S.moved.includes(m.id)?`<span class="tag moved">Moved up by you</span>`:""}<span class="st ${stCls(st)}" style="margin-left:auto">${st}</span></div>
+    </li>`}).join(""):`<li class="empty">No members match. <button class="linkbtn" id="clearQ">Clear search</button></li>`;
+}
+
+/* detail */
+function head(m){
+  const[bc,bl]=BAND[m.band];
+  const bar=`<div class="bar" role="img" aria-label="Score parts: ${m.parts.map((v,i)=>PARTS[i][0]+" "+v).join(", ")}">${m.parts.map((v,i)=>v?`<i style="width:${v}%;background:var(${PARTS[i][1]})"></i>`:"").join("")}</div>`;
+  const why=S.why?`<div class="whypanel"><table>${m.parts.map((v,i)=>`<tr><td style="width:170px"><span class="sw" style="background:var(${PARTS[i][1]})"></span>${PARTS[i][0]}</td><td class="num" style="width:60px"><b>${v}</b> / ${PARTS[i][2]}</td><td>${esc(m.partWhy[i])}</td></tr>`).join("")}</table><div class="rule">Safety rules beat the score. Ease of reaching someone is never scored.</div></div>`:"";
+  return `<div class="mhead"><div><h2>${esc(m.name)}, ${m.age}</h2><div class="facts"><span>${m.mid}</span><span>${esc(m.plan)}</span><span>${m.lang}</span><span>GP ${esc(m.pcp)}</span><span>${esc(m.city)}</span></div></div>
+  <div class="scorebox"><div><span class="tag ${bc}"><i></i>${bl}</span> <span class="big num">${score(m)}<small> / 100</small></span></div>${bar}<button class="linkbtn" id="whyBtn" aria-expanded="${S.why}">${S.why?"Hide":"Why"} ${score(m)}?</button>${S.moved.includes(m.id)?"":` · <button class="linkbtn" id="ovBtn" aria-expanded="${S.ovOpen}">Call first instead</button>`}
+  ${S.ovOpen?`<div class="override">Move ${esc(m.short)} to the top of My Day. Why?<br>${["My clinical judgment","Member asked for this time","Caregiver available now"].map(r=>`<button class="btn" data-ov="${r}">${r}</button>`).join("")}<div class="src">Logged for the Friday override review, so the ranking learns.</div></div>`:""}</div></div>${why}`;
+}
+function tabs(){const t=[["summary","Member 360"],["medicines","Medicines"],["history","History"],["call","Call &amp; Document"]];
+  return `<div class="tabs" role="tablist">${t.map(([k,l],i)=>`<button role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${l}<kbd>${i+1}</kbd></button>`).join("")}</div>`}
+function summary(m){
+  const urgent=m.alerts.filter(a=>a[0]!=="info").slice(0,2), rest=m.alerts.filter(a=>!urgent.includes(a));
+  const best=m.numbers.find(n=>n.best);
+  return `<div class="grid2"><div>
+    <div class="section"><h3>Needs action today</h3>${urgent.map(a=>{const k=m.id+":"+a[1];return `<div class="callout ${a[0]==="warn"?"warn":""}"><h4>${esc(a[1])}</h4><p>${esc(a[2])}</p><div class="src srcrow"><span>Source: ${esc(a[3])}</span>${S.flagged[k]?`<span class="nu flagged">Sent to weekly alert review</span>`:`<button class="nu" data-nu="${esc(k)}">Not useful?</button>`}</div></div>`}).join("")}</div>
+    ${rest.length?`<div class="section"><h3>Also worth checking</h3><ul class="quiet">${rest.map(a=>`<li><b>${esc(a[1])}.</b> ${esc(a[2])} <div class="src">${esc(a[3])}</div></li>`).join("")}</ul></div>`:""}
+    <div class="section"><h3>Suggested next steps <span style="text-transform:none;letter-spacing:0;font-weight:400">· tick to add as your task</span></h3><ul class="steps">${m.actions.map((a,i)=>`<li class="${S.ticks[m.id].has(i)?"ticked":""}"><input type="checkbox" id="a${i}" data-tick="${i}" ${S.ticks[m.id].has(i)?"checked":""}><label for="a${i}">${esc(a)}<span class="ai">suggested</span></label></li>`).join("")}</ul></div>
+  </div><div>
+    <div class="panel"><h3>How to reach</h3><dl class="kv"><dt>Best number</dt><dd><b class="num">${best.n}</b> · ${esc(best.who)}</dd><dt>How sure</dt><dd>${best.conf}% · ${esc(best.src)}</dd><dt>Best time</dt><dd>${esc(m.bestTime)}</dd></dl>
+      <div class="perm ${m.permission[0]}">${esc(m.permission[1])}</div><button class="btn primary" data-go="call">Start call</button></div>
+    <div class="panel"><h3>Labs, in plain words</h3><table style="width:100%;border-collapse:collapse;font-size:14px">${m.labs.map(l=>`<tr><td style="padding:6px 0;border-top:1px solid var(--line-2)">${esc(l[0])}<div>${fresh(l[3])}</div></td><td style="padding:6px 0;border-top:1px solid var(--line-2);text-align:right"><span class="${l[4]?"s-"+(l[4]==="red"?"red":"amber"):""}">${esc(l[1])}</span><div class="src" style="margin-top:2px">${esc(l[2])}</div></td></tr>`).join("")}</table></div>
+    <div class="panel"><h3>Home and life</h3><ul class="quiet">${m.life.map(l=>`<li>${esc(l[0])}<div>${fresh(l[1])}</div></li>`).join("")}</ul></div>
+  </div></div>`;
+}
+function medicines(m){
+  const conflicts=m.meds.filter(r=>/red|amber/.test(r[4])).length;
+  return `<p class="note-intro">${conflicts?`<b>${conflicts} of ${m.meds.length}</b> medicines need a decision. Sources are shown side by side; nothing is changed until you choose.`:"All sources agree."}</p>
+  <table class="data"><thead><tr>${m.medHead.map(h=>`<th>${esc(h)}</th>`).join("")}<th>Your decision</th></tr></thead><tbody>${m.meds.map((r,i)=>{const[c,t]=r[4].split("|");const need=c!=="green";
+    return `<tr><td><b>${esc(r[0])}</b></td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td><td class="s-${c}">${esc(t)}</td><td>${need?`<select data-med="${i}" aria-label="Decision for ${esc(r[0])}">${["Not decided yet","Confirm stop","Confirm continue","Ask prescriber"].map(o=>`<option ${S.meds[m.id][i]===o?"selected":""}>${o}</option>`).join("")}</select>`:`<span class="st">No action</span>`}</td></tr>`}).join("")}</tbody></table>`;
+}
+function historyTab(m){
+  return `<p class="note-intro">Newest first. Each line shows when it happened, where it came from, and how old the data is.</p>
+  <table class="data"><thead><tr><th style="width:90px">Date</th><th>What happened</th><th>Source</th><th>Freshness</th></tr></thead><tbody>${m.timeline.map(t=>`<tr><td class="num">${fmt(t[0])}</td><td>${esc(t[1])}</td><td>${esc(t[2])}</td><td>${fresh(t[0])}</td></tr>`).join("")}</tbody></table>`;
+}
+function call(m){
+  const conf=S.confirmed[m.id], left=m.note.length-conf.size;
+  const need=m.fields.filter(f=>f[2]==="maria"&&!S.fieldVals[m.id][f[0]]).length;
+  const can=left===0&&need===0&&S.outcome[m.id]==="Reached";
+  return `<div class="grid2"><div>
+    <div class="section"><h3>Numbers, best first</h3>${m.numbers.map(n=>`<div class="number ${n.best?"best":""} ${n.retired?"retired":""}"><div><div class="n num">${n.n}</div><div class="src" style="margin-top:2px">${esc(n.who)} · ${esc(n.src)}${n.reason?" · "+esc(n.reason):""}${n.note?" · "+esc(n.note):""}</div></div><div class="conf">${n.retired?"Retired":n.conf+"% likely"}<div class="meter"><i style="width:${n.conf}%"></i></div></div></div>`).join("")}
+      <div class="src" style="font-size:13px;color:var(--muted)">${esc(m.bestTime)}</div>
+      <div class="perm ${m.permission[0]}">${esc(m.permission[1])}</div></div>
+    <div class="section"><h3>Ask on the call</h3><ul class="steps">${m.checklist.map((c,i)=>`<li><input type="checkbox" id="c${i}"><label for="c${i}">${esc(c)}</label></li>`).join("")}</ul></div>
+    <div class="section"><h3>How did the call go?</h3>${m.id==="harold"?`<div class="window">2-business-day contact after discharge: discharged Thu 5 Nov, so due <b>today, Mon 9 Nov</b>. Keep trying until reached; every attempt is recorded.</div>`:""}<div class="src" style="margin:0 0 8px">Attempts logged today: <b>${S.attempts[m.id]||0}</b></div><div class="outcomes" role="group" aria-label="Call outcome">${["Reached","Left voicemail","No answer","Wrong number"].map(o=>`<button class="btn" data-out="${o}" aria-pressed="${S.outcome[m.id]===o}">${o}</button>`).join("")}</div></div>
+  </div><div>
+    <div class="section"><h3>Call note · drafted for you</h3><p class="note-intro">Confirm or edit each line. Edits are kept so we can measure how good the drafts are.</p>
+      ${m.note.map((l,i)=>`<div class="nl ${conf.has(i)?"ok":""}"><div class="txt" id="nl${i}">${esc(l)}</div><div class="acts">${conf.has(i)?`<span class="st done">Confirmed</span><button class="btn" data-undo="${i}">Undo</button>`:`<button class="btn" data-edit="${i}">Edit</button><button class="btn primary" data-conf="${i}">Confirm</button>`}</div></div>`).join("")}</div>
+    <div class="section"><h3>Assessment fields</h3><div class="fields">${m.fields.map(f=>{const mine=f[2]==="maria";const v=S.fieldVals[m.id][f[0]]||"";
+      const fk=m.id+":"+f[0], ch=S.fEdit[fk]!==undefined;
+      if(!mine&&ch)return `<div class="field"><label for="f_${esc(f[0])}">${esc(f[0])}</label><input id="f_${esc(f[0])}" data-fedit="${esc(fk)}" value="${esc(S.fEdit[fk])}"><div class="by by-you">Changed by you · was "${esc(f[1])}" <button class="chg" data-frevert="${esc(fk)}">Undo</button></div></div>`;
+      return `<div class="field"><label for="f_${esc(f[0])}">${esc(f[0])}</label>${mine?`<input id="f_${esc(f[0])}" data-field="${esc(f[0])}" value="${esc(v)}" placeholder="e.g. ${esc(f[1])}">`:`<div style="font-weight:600;padding:3px 0">${esc(f[1])}</div>`}<div class="by ${mine?"by-maria":f[2]==="ai"?"by-ai":"by-auto"}">${mine?"Needs your answer":f[2]==="ai"?"Filled from the call · check":"Filled automatically"}${mine?"":`<button class="chg" data-fchange="${esc(fk)}" data-fval="${esc(f[1])}">Change</button>`}</div></div>`}).join("")}</div></div>
+    <div class="savebar"><div class="left">${can?"Ready to sign.":[S.outcome[m.id]!=="Reached"?"Mark the call as Reached":"",left?`${left} note line${left>1?"s":""} to confirm`:"",need?`${need} field${need>1?"s":""} to answer`:""].filter(Boolean).join(" · ")}</div><button class="btn primary" id="sign" ${can?"":"disabled"}>Sign and save</button></div>
+  </div></div>`;
+}
+function renderDetail(){
+  const m=M.find(x=>x.id===S.sel);
+  const body={summary,medicines,history:historyTab,call}[S.tab](m);
+  $("#detail").innerHTML=head(m)+tabs()+`<div role="tabpanel">${body}</div>`;
+  document.title=`${m.short} · CareRounds`;
+}
+function renderNav(){document.querySelectorAll(".topnav a").forEach(a=>{if(a.dataset.view===S.view)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});$("#taskBadge").textContent=openTasks()}
+function renderTasks(){
+  const groups=[["Today",x=>x.dueRank===0],["Next 7 days",x=>x.dueRank>0&&x.dueRank<=7],["Later",x=>x.dueRank>7]];
+  const row=x=>{const m=M.find(y=>y.id===x.mem);
+    if(x.removed)return `<div class="task removed"><span></span><div class="tt">${esc(x.text)}</div><div class="due">${esc(x.due)}</div><div class="tm"><span>${esc(m.name)}</span><span class="src-tag">Removed by you · ${esc(x.rmReason)}</span><span class="tools"><button data-trestore="${x.id}">Restore</button></span></div></div>`;
+    const editing=S.tEdit===x.id, rm=S.tRm===x.id;
+    return `<div class="task ${x.done?"done":""} ${editing?"editing":""}"><input type="checkbox" data-task="${x.id}" ${x.done?"checked":""} aria-label="Done: ${esc(x.text)}"><div class="tt">${esc(x.text)}</div><div class="due ${x.dueRank===0&&!x.done?"hot":""}">${esc(x.due)}</div>
+    ${editing?`<div class="edit"><input id="tEditText" value="${esc(x.text)}" aria-label="Task text"><select id="tEditDue" aria-label="Due">${DUEOPTS.map(([l,r])=>`<option value="${r}" ${x.due===l?"selected":""}>${l}</option>`).join("")}</select><button class="btn primary" data-tsave="${x.id}">Save</button><button class="btn" data-tcancel>Cancel</button></div>`:""}
+    ${rm?`<div class="why-rm">${x.kind==="auto"?"This was created automatically. Why remove it?":"Remove this task?"}<br>${(x.kind==="auto"?["Already done elsewhere","Not needed for this member","Wrong deadline or rule"]:["Not needed any more"]).map(r=>`<button class="btn" data-trm="${x.id}" data-reason="${r}">${r}</button>`).join("")}<button class="btn" data-tcancel>Keep it</button>${x.kind==="auto"?`<div class="src">Removals of auto-created tasks go to the weekly review, so the rules get better.</div>`:""}</div>`:""}
+    <div class="tm"><a href="#${m.id}/summary" data-open="${m.id}">${esc(m.name)}</a><span class="src-tag ${x.kind}">${esc(x.src)}${x.edited?" · edited by you":""}</span>${x.done||editing||rm?"":`<span class="tools"><button data-tedit="${x.id}">Edit</button><button class="rm" data-trmask="${x.id}">Remove</button></span>`}</div></div>`};
+  const open=T.filter(x=>!x.done&&!x.removed),done=T.filter(x=>x.done&&!x.removed),removed=T.filter(x=>x.removed);
+  $("#altView").innerHTML=`<h2>Tasks</h2><p class="lead">Everything Maria used to keep in her own spreadsheet. Deadlines are created automatically from hospital alerts, safety flags and quality rules; she can add her own.</p>
+  <div class="cols"><div>
+    <form class="addtask" id="addTask"><input id="newTask" placeholder="Add a task, e.g. Call pharmacy about delivery" aria-label="New task"><select id="newMem" aria-label="Member">${M.map(m=>`<option value="${m.id}">${m.short}</option>`).join("")}</select><button class="btn primary">Add</button></form>
+    ${groups.map(([g,f])=>{const xs=open.filter(f);return xs.length?`<div class="tgroup"><h3>${g} <span>· ${xs.length}</span></h3>${xs.map(row).join("")}</div>`:""}).join("")}
+    ${done.length?`<div class="tgroup"><h3>Done <span>· ${done.length}</span></h3>${done.map(row).join("")}</div>`:""}
+    ${removed.length?`<div class="tgroup"><h3>Removed <span>· ${removed.length}</span></h3>${removed.map(row).join("")}</div>`:""}
+  </div><div>
+    <div class="panel"><h3>Where tasks come from</h3><ul class="quiet"><li><span class="src-tag auto">Auto-created</span> Deadlines from alerts, safety flags and quality rules (2-day discharge call, 7-day follow-up). She can edit, re-date or remove any of them.</li><li><span class="src-tag sug">Suggested</span> Next steps she ticks on a member's summary</li><li><span class="src-tag you">You</span> Anything she adds, plus call retries after a voicemail</li></ul></div>
+    <div class="panel"><h3>Due dates at a glance</h3><dl class="kv"><dt>Today</dt><dd><b>${open.filter(x=>x.dueRank===0).length}</b> open</dd><dt>Next 7 days</dt><dd><b>${open.filter(x=>x.dueRank>0&&x.dueRank<=7).length}</b> open</dd><dt>Done today</dt><dd><b>${done.length}</b></dd></dl></div>
+  </div></div>`;
+}
+function renderCaseload(){
+  let rows=caseRows();
+  if(S.cfilter==="worked")rows=rows.filter(r=>r.sample);if(S.cfilter==="alerts")rows=rows.filter(r=>r.alert||r.id==="harold"||r.id==="darnell");
+  if(S.cq)rows=rows.filter(r=>(r.name+" "+r.mid).toLowerCase().includes(S.cq.toLowerCase()));
+  rows.sort((a,b)=>b.score-a.score);
+  const al=[["Darnell Hayes","ER visit Fri 6 Nov, sent home · no diagnosis on alert","darnell"],["Harold Brennan","Discharge summary arrived by fax Sun 8 Nov (discharged Thu)","harold"]].concat(Object.entries(ALERT_OTHERS).map(([i,txt])=>[C[i].name,txt,null]));
+  $("#altView").innerHTML=`<h2>Caseload · 48 members</h2><p class="lead">The 5 at the top are on today's My Day list. The other 43 have no deadline and nothing new, so they are reviewed on schedule and move to My Day when a new alert, fill gap or deadline appears.</p>
+  <div class="cols"><div>
+    <div class="ctools"><div role="group" aria-label="Filter caseload" style="display:flex;gap:6px">${[["all","All 48"],["worked","On My Day"],["alerts","Alert since Friday"]].map(([k,l])=>`<button class="chip" data-cf="${k}" aria-pressed="${S.cfilter===k}">${l}</button>`).join("")}</div><input id="cq" type="search" placeholder="Filter by name or ID…" aria-label="Filter caseload" value="${esc(S.cq)}" style="border:1px solid var(--line);border-radius:6px;padding:5px 10px;margin-left:8px"><span class="count">${rows.length} shown</span></div>
+    <table class="data"><thead><tr><th>Member</th><th>Program</th><th>Today Score</th><th>When</th><th>Last contact</th><th>Next review</th></tr></thead><tbody>
+    ${rows.map(r=>{if(r.sample){const m=M.find(x=>x.id===r.id);const[bc,bl]=BAND[r.band];return `<tr class="clickable sample" data-open="${r.id}"><td><b>${esc(r.name)}</b><div class="src">${r.mid} · ${r.age}</div></td><td>${r.prog}</td><td class="num"><b>${r.score}</b></td><td><span class="tag ${bc}"><i></i>${bl}</span></td><td class="num">${S.status[r.id]==="Done"?"9 Nov<div class=\"src\">today · reached</div>":`${LASTC[r.id][0]}<div class="src">${LASTC[r.id][1]}</div>`}</td><td class="num">${NEXTR[r.id][0]}<div class="src">${NEXTR[r.id][1]}</div></td></tr>`}
+      const exp=S.open===r.id;return `<tr class="clickable" data-crow="${r.id}" aria-expanded="${exp}"><td>${esc(r.name)}<div class="src">${r.mid} · ${r.age}</div></td><td>${r.prog}</td><td class="num">${r.score}</td><td><span class="st">${r.alert?"Watch alert":"Routine"}</span></td><td class="num">${fmt(r.last)}<div class="src">routine check-in</div></td><td class="num">${fmt(r.next)}<div class="src">scheduled review</div></td></tr>${exp?`<tr><td colspan="6" style="background:#F8FAFD;font-size:13px">${r.alert?`<b>Alert:</b> ${esc(r.alert)}. `:""}Nothing due before ${fmt(r.next)}. Last contact ${fmt(r.last)}: routine check-in. The full member view is built for the 5 worked examples only.</td></tr>`:""}`}).join("")}
+    </tbody></table>
+  </div><div>
+    <div class="panel"><h3>6 hospital alerts since Friday</h3><ul class="quiet alertlist">${al.map(a=>`<li><div>${a[2]?`<a href="#${a[2]}/summary" data-open="${a[2]}"><b>${esc(a[0])}</b></a>`:`<b>${esc(a[0])}</b>`}<div class="src" style="margin-top:2px">${esc(a[1])}</div></div></li>`).join("")}</ul></div>
+    <div class="panel"><h3>Why only 5 on My Day?</h3><p style="margin:0;font-size:14px">Members still in hospital are called after discharge. Members the weekend nurse already reached don't need a second call. Everyone else has no deadline this week.</p></div>
+  </div></div>`;
+}
+function render(){renderStats();renderNav();const w=S.view==="worklist";$("#workView").hidden=!w;$("#altView").hidden=w;
+  if(w){renderFilters();renderList();renderDetail()}else if(S.view==="tasks")renderTasks();else renderCaseload();toHash()}
+
+/* toast */
+let tt;function toast(t,act,fn){$("#toastText").textContent=t;const b=$("#toastAct");b.hidden=!act;if(act){b.textContent=act;b.onclick=()=>{fn();$("#toast").hidden=true}}$("#toast").hidden=false;clearTimeout(tt);tt=setTimeout(()=>$("#toast").hidden=true,5000)}
+function select(id,tab){S.sel=id;if(tab)S.tab=tab;S.why=false;S.ovOpen=false;render();$("#detail").focus({preventScroll:true});document.querySelector(".detail").scrollIntoView({block:"nearest"})}
+function nextOpen(){const v=visible().filter(m=>S.status[m.id]!=="Done");return v.find(m=>m.id!==S.sel)}
+
+/* events */
 document.addEventListener("click",e=>{
-  const o=e.target.closest("[data-open]");if(o){cur=o.dataset.open}
-  const p=e.target.closest("[data-pick]");if(p){cur=p.dataset.pick;show(location.hash.slice(1)||"overview")}
-  const ok=e.target.closest("[data-ok]");if(ok){const i=+ok.dataset.ok;const line=document.querySelector(`.note-line[data-i="${i}"]`);line.classList.add("ok");line.querySelector(".txt").contentEditable="false";ok.textContent="Confirmed";ok.disabled=true;confirmed.add(i);const m=M.find(x=>x.id===cur);const left=m.note.length-confirmed.size;$("#signhint").textContent=left?left+" lines left to confirm":"All lines confirmed";$("#sign").disabled=left>0}
-  const ed=e.target.closest("[data-edit]");if(ed){const t=document.querySelector(`.note-line[data-i="${ed.dataset.edit}"] .txt`);t.contentEditable="true";t.focus()}
-  if(e.target.id==="sign"){const m=M.find(x=>x.id===cur);toast(`Saved for ${m.short}. ${m.actions.length} follow-up tasks created. Today Score updated.`)}
+  const t=e.target.closest("[data-tedit],[data-tsave],[data-tcancel],[data-trmask],[data-trm],[data-trestore],[data-fchange],[data-frevert],[data-nu],[data-ov],#ovBtn,[data-view],[data-open],[data-cf],[data-crow],[data-id],[data-f],[data-tab],[data-go],[data-conf],[data-undo],[data-edit],[data-out],#whyBtn,#sign,#aboutBtn,[data-close],#clearQ,[data-soon]");if(!t)return;
+  if(t.dataset.view){e.preventDefault();S.view=t.dataset.view;render();window.scrollTo(0,0);return}
+  if(t.dataset.open){e.preventDefault();S.view="worklist";return select(t.dataset.open,"summary")}
+  if(t.dataset.cf){S.cfilter=t.dataset.cf;return renderCaseload()}
+  if(t.dataset.crow){S.open=S.open===t.dataset.crow?null:t.dataset.crow;return renderCaseload()}
+  const m=M.find(x=>x.id===S.sel);
+  if(t.dataset.soon!==undefined){e.preventDefault();toast("Not part of this prototype.");return}
+  if(t.dataset.id)return select(t.dataset.id);
+  if(t.dataset.f){S.filter=t.dataset.f;return render()}
+  if(t.dataset.tab){S.tab=t.dataset.tab;return render()}
+  if(t.dataset.go){S.tab=t.dataset.go;return render()}
+  if(t.id==="whyBtn"){S.why=!S.why;return renderDetail()}
+  if(t.dataset.tedit){S.tEdit=+t.dataset.tedit;S.tRm=null;renderTasks();const n=$("#tEditText");n.focus();n.setSelectionRange(n.value.length,n.value.length);return}
+  if(t.dataset.tcancel!==undefined){S.tEdit=null;S.tRm=null;return renderTasks()}
+  if(t.dataset.tsave){const x=T.find(y=>y.id===+t.dataset.tsave);const v=$("#tEditText").value.trim();if(!v){$("#tEditText").focus();return}const sel=$("#tEditDue");x.text=v;x.dueRank=+sel.value;x.due=sel.options[sel.selectedIndex].text;x.edited=true;S.tEdit=null;renderTasks();renderNav();toast("Task updated.");return}
+  if(t.dataset.trmask){S.tRm=+t.dataset.trmask;S.tEdit=null;return renderTasks()}
+  if(t.dataset.trm){const x=T.find(y=>y.id===+t.dataset.trm);x.removed=true;x.rmReason=t.dataset.reason.toLowerCase();S.tRm=null;renderTasks();renderNav();toast("Task removed. Reason logged.","Undo",()=>{x.removed=false;renderTasks();renderNav()});return}
+  if(t.dataset.trestore){const x=T.find(y=>y.id===+t.dataset.trestore);x.removed=false;renderTasks();renderNav();return}
+  if(t.dataset.fchange){S.fEdit[t.dataset.fchange]=t.dataset.fval;renderDetail();const n=document.querySelector(`[data-fedit="${CSS.escape(t.dataset.fchange)}"]`);if(n){n.focus();n.select()}return}
+  if(t.dataset.frevert){delete S.fEdit[t.dataset.frevert];return renderDetail()}
+  if(t.id==="ovBtn"){S.ovOpen=!S.ovOpen;return renderDetail()}
+  if(t.dataset.ov){S.moved=S.moved.filter(x=>x!==m.id);S.moved.unshift(m.id);S.ovOpen=false;render();toast(`${m.short} moved to the top. Reason logged: ${t.dataset.ov.toLowerCase()}.`,"Undo",()=>{S.moved=S.moved.filter(x=>x!==m.id);render()});return}
+  if(t.dataset.nu){S.flagged[t.dataset.nu]=true;renderDetail();toast("Thanks. This alert goes to the weekly alert review.");return}
+  if(t.id==="aboutBtn")return $("#about").showModal();
+  if(t.dataset.close!==undefined)return $("#about").close();
+  if(t.id==="clearQ"){S.q="";$("#q").value="";return render()}
+  if(t.dataset.edit){const el=$("#nl"+t.dataset.edit);el.contentEditable="true";el.focus();t.textContent="Editing…";t.disabled=true;return}
+  if(t.dataset.conf){const i=+t.dataset.conf;const el=$("#nl"+i);m.note[i]=el.textContent.trim();S.confirmed[m.id].add(i);return renderDetail()}
+  if(t.dataset.undo){S.confirmed[m.id].delete(+t.dataset.undo);return renderDetail()}
+  if(t.dataset.out){const o=t.dataset.out;S.outcome[m.id]=o;S.attempts[m.id]=(S.attempts[m.id]||0)+1;
+    if(o==="Reached"){S.status[m.id]="Reached";render();return}
+    S.status[m.id]=o==="Wrong number"?"Wrong number":"Tried · "+o.toLowerCase();
+    addTask(m.id,o==="Wrong number"?`Find a working number for ${m.short}`:`Retry call to ${m.short} later today`,"Today",0,"You · call outcome","you");render();
+    const n=nextOpen();toast(`${m.short}: ${o.toLowerCase()} logged. Try again later today.`,n?`Open ${n.short}`:null,()=>select(n.id,"summary"));return}
+  if(t.id==="sign"){S.status[m.id]="Done";T.filter(x=>x.mem===m.id&&!x.done&&x.dueRank===0&&/call/i.test(x.text)).forEach(x=>x.done=true);const prev=m.id;render();const n=nextOpen();
+    toast(`${m.short}: note signed and saved.`,"Undo",()=>{S.status[prev]="Reached";render()});
+    if(n)setTimeout(()=>toast(`${m.short} saved. Next up: ${n.short}.`,`Open ${n.short}`,()=>select(n.id,"summary")),1400);return}
 });
-function show(v){
-  if(!["overview","my-day","member","call"].includes(v))v="overview";
-  ["overview","my-day","member","call"].forEach(x=>{$("#v-"+x).hidden=x!==v});
-  document.querySelectorAll(".nav a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
-  if(v==="my-day")renderDay();
-  if(v==="member"){picker($("#picker1"));render360()}
-  if(v==="call"){picker($("#picker2"));renderCall()}
-  window.scrollTo(0,0);
-}
-window.addEventListener("hashchange",()=>show(location.hash.slice(1)));
-show(location.hash.slice(1)||"overview");
+document.addEventListener("change",e=>{const m=M.find(x=>x.id===S.sel);const t=e.target;
+  if(t.dataset.tick!==undefined){const i=+t.dataset.tick;const key=m.id+":"+i;
+    if(t.checked){S.ticks[m.id].add(i);addTask(m.id,m.actions[i],"Today",0,"Suggested · "+m.short,"sug");T[T.length-1].key=key;toast("Added to Tasks, due today.","Open Tasks",()=>{S.view="tasks";render()})}
+    else{S.ticks[m.id].delete(i);const k=T.findIndex(x=>x.key===key);if(k>-1)T.splice(k,1)}
+    t.closest("li").classList.toggle("ticked",t.checked);renderNav()}
+  if(t.dataset.task){const x=T.find(y=>y.id===+t.dataset.task);x.done=t.checked;renderTasks();renderNav()}
+  if(t.dataset.med!==undefined){S.meds[m.id][+t.dataset.med]=t.value}
+});
+document.addEventListener("input",e=>{const t=e.target;const m=M.find(x=>x.id===S.sel);
+  if(t.id==="q"){S.q=t.value;if(S.view!=="worklist"){S.view="worklist";render();$("#q").focus()}renderList();return}
+  if(t.dataset.fedit){S.fEdit[t.dataset.fedit]=t.value;return}
+  if(t.id==="cq"){S.cq=t.value;renderCaseload();const n=$("#cq");n.focus();n.setSelectionRange(n.value.length,n.value.length);return}
+  if(t.dataset.field){S.fieldVals[m.id][t.dataset.field]=t.value.trim();const pos=t.selectionStart;const name=t.dataset.field;renderDetail();const n=document.querySelector(`[data-field="${CSS.escape(name)}"]`);if(n){n.focus();n.setSelectionRange(pos,pos)}}
+});
+document.addEventListener("keydown",e=>{if(e.target.id==="tEditText"){if(e.key==="Enter"){e.preventDefault();document.querySelector("[data-tsave]").click()}if(e.key==="Escape"){S.tEdit=null;renderTasks()}}},true);
+document.addEventListener("submit",e=>{if(e.target.id==="addTask"){e.preventDefault();const v=$("#newTask").value.trim();if(!v){$("#newTask").focus();return}addTask($("#newMem").value,v,"Today",0,"You · added today","you");renderTasks();renderNav();$("#newTask").focus()}});
+document.addEventListener("keydown",e=>{
+  const typing=/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.target.isContentEditable;
+  if(e.key==="Escape"&&e.target.id==="q"){e.target.blur();return}
+  if(typing||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==="/"){e.preventDefault();$("#q").focus();return}
+  if(S.view!=="worklist"&&e.key!=="/")return;
+  if(e.key==="j"||e.key==="k"){const v=visible();let i=v.findIndex(m=>m.id===S.sel);i=Math.max(0,Math.min(v.length-1,i+(e.key==="j"?1:-1)));if(v[i])select(v[i].id);return}
+  const k=["summary","medicines","history","call"][+e.key-1];if(k){S.tab=k;render()}
+});
+window.addEventListener("hashchange",()=>{fromHash();render()});
+fromHash();render();
 </script>
-
+</body>
 </html>
