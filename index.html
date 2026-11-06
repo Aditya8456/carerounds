@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CareRounds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app shell — navy top bar, white working surface, cards only where a decision lives */
+:root{
+  --navy:#0B1F4D; --blue:#1F5FE0; --sky:#E9F0FD; --ink:#13213F; --muted:#5A6A8C; --line:#D6E0F2;
+  --bg:#F6F8FD; --surface:#FFFFFF; --bar:#0B1F4D; --bar-fg:#FFFFFF;
+  --red:#C62D2D; --red-bg:#FDECEC; --amber:#B86A00; --amber-bg:#FFF3DC; --green:#1E7B4F; --green-bg:#E3F5EC;
+  --s-deadline:#1F5FE0; --s-danger:#D9480F; --s-history:#6C8EF5; --s-sick:#9DB8F7; --s-mind:#2E9C93; --s-life:#A5B0C7;
+  --ai:#5B3FD6; --ai-bg:#EFEBFD;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif; --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --navy:#9DB8F7; --blue:#6E9BFF; --sky:#16264A; --ink:#E6ECFA; --muted:#9FB0D3; --line:#24365F;
+  --bg:#0A1430; --surface:#111D3D; --bar:#060E24; --bar-fg:#E6ECFA;
+  --red:#FF7B7B; --red-bg:#3A1620; --amber:#F2B44C; --amber-bg:#33260E; --green:#5FD39A; --green-bg:#0F2E22;
+  --ai:#B4A3FF; --ai-bg:#231B47; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --navy:#9DB8F7; --blue:#6E9BFF; --sky:#16264A; --ink:#E6ECFA; --muted:#9FB0D3; --line:#24365F;
+  --bg:#0A1430; --surface:#111D3D; --bar:#060E24; --bar-fg:#E6ECFA;
+  --red:#FF7B7B; --red-bg:#3A1620; --amber:#F2B44C; --amber-bg:#33260E; --green:#5FD39A; --green-bg:#0F2E22;
+  --ai:#B4A3FF; --ai-bg:#231B47; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bar)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;color:var(--ink)}
+h1{font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.15;font-weight:700}
+h2{font-size:1.3rem;font-weight:600}
+h3{font-size:1rem;font-weight:600}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-size:.82em}
+.muted{color:var(--muted)}
+.label{font-family:var(--f-display);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bar);color:var(--bar-fg)}
+.top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:10px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:1.15rem;color:var(--bar-fg);text-decoration:none}
+.logo svg{flex:none}
+.nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.nav a{color:var(--bar-fg);opacity:.75;text-decoration:none;font-family:var(--f-display);font-size:.9rem;padding:6px 12px;border-radius:999px}
+.nav a:hover{opacity:1}
+.nav a[aria-current="page"]{opacity:1;background:rgba(255,255,255,.14)}
+.demo-tag{font-size:.75rem;background:rgba(255,255,255,.12);padding:3px 10px;border-radius:999px;color:var(--bar-fg)}
+
+main{padding-block:24px 64px}
+.view{display:grid;gap:20px}
+
+/* overview */
+.hero{background:linear-gradient(135deg,#0B1F4D 0%,#163A8C 60%,#1F5FE0 100%);color:#fff;border-radius:20px;padding:36px clamp(20px,4vw,48px);display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center}
+.hero h1{color:#fff}
+.hero p{color:#D9E4FF;font-size:1.05rem;max-width:58ch;margin-top:12px}
+.hero .cta{display:inline-flex;margin-top:20px;background:#fff;color:#0B1F4D;border:0;border-radius:999px;padding:11px 22px;font-family:var(--f-display);font-weight:600;text-decoration:none}
+.hero-card{background:#fff;color:#13213F;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,.25);display:grid;gap:10px}
+.hero-card .row{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.hero-card .row b{font-family:var(--f-display)}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pillar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:8px;align-content:start}
+.pillar .k{font-family:var(--f-display);font-size:.8rem;color:var(--blue);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.stat{padding:16px 18px;border-left:3px solid var(--blue);background:var(--surface);border-radius:0 12px 12px 0}
+.stat .n{font-family:var(--f-display);font-size:1.7rem;font-weight:700;color:var(--navy)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-display);font-weight:500;font-size:.78rem;color:var(--muted);letter-spacing:.03em}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;align-content:start;min-width:0}
+
+/* pills & badges */
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-display);font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.b-now{background:var(--red-bg);color:var(--red)}
+.b-today{background:var(--amber-bg);color:var(--amber)}
+.b-week{background:var(--green-bg);color:var(--green)}
+.fresh{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;color:var(--muted);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.d-live{background:#2BB673}.d-recent{background:#E7B416}.d-lag{background:#EE8433}.d-stale{background:#D64545}
+.ai-tag{display:inline-flex;gap:4px;align-items:center;font-size:.72rem;font-weight:600;color:var(--ai);background:var(--ai-bg);padding:2px 8px;border-radius:999px;font-family:var(--f-display)}
+
+/* my day */
+.dayhead{display:flex;flex-wrap:wrap;gap:16px;align-items:end;justify-content:space-between}
+.counts{display:flex;gap:10px;flex-wrap:wrap}
+.count{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:110px}
+.count .n{font-family:var(--f-display);font-weight:700;font-size:1.4rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.queue{display:grid;gap:12px}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:start}
+.qcard.now{border-left:5px solid var(--red)}.qcard.today{border-left:5px solid var(--amber)}.qcard.week{border-left:5px solid var(--green)}
+.rank{font-family:var(--f-display);font-size:1.5rem;font-weight:700;color:var(--muted);text-align:center}
+.qmain{display:grid;gap:8px;min-width:0}
+.qtitle{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.qtitle h3{font-size:1.1rem}
+.why{font-size:.95rem}
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--sky);max-width:420px}
+.bar i{display:block;height:100%}
+.scoreline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.score{font-family:var(--f-display);font-weight:700;font-size:1.25rem;color:var(--navy);font-variant-numeric:tabular-nums}
+.score small{font-weight:400;font-size:.75rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.8rem;border:1px solid var(--line);border-radius:8px;padding:2px 8px;background:var(--bg)}
+.qact{display:grid;gap:8px;justify-items:end}
+.btn{border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:10px;padding:8px 14px;font-family:var(--f-display);font-weight:500;font-size:.88rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.ghost{background:transparent;color:var(--blue)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+details.parts{font-size:.88rem}
+details.parts summary{cursor:pointer;color:var(--blue);font-family:var(--f-display);font-size:.82rem}
+.ptable{display:grid;gap:4px;margin-top:8px}
+.prow{display:grid;grid-template-columns:150px 54px 1fr;gap:10px;align-items:baseline}
+.prow b{font-variant-numeric:tabular-nums;font-family:var(--f-display)}
+
+/* member 360 */
+.mhead{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center}
+.mhead .facts{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.9rem}
+.picker{display:flex;gap:6px;flex-wrap:wrap}
+.picker button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:.85rem}
+.picker button[aria-pressed="true"]{background:var(--navy);color:var(--surface);border-color:var(--navy)}
+.alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.alert{border-radius:12px;padding:12px 14px;display:grid;gap:4px;border:1px solid var(--line);background:var(--surface)}
+.alert.danger{background:var(--red-bg);border-color:transparent}
+.alert.warn{background:var(--amber-bg);border-color:transparent}
+.alert .t{font-family:var(--f-display);font-weight:600}
+.alert.danger .t{color:var(--red)}.alert.warn .t{color:var(--amber)}
+.src{font-size:.75rem;color:var(--muted)}
+.grid360{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+.timeline{display:grid;gap:0}
+.tl{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.tl:last-child{border-bottom:0}
+.tl .when{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+.st-red{color:var(--red);font-weight:600}.st-amber{color:var(--amber);font-weight:600}.st-green{color:var(--green);font-weight:600}
+.actions ol{margin:0;padding-left:20px;display:grid;gap:6px}
+
+/* call */
+.callgrid{display:grid;grid-template-columns:1fr 1.3fr;gap:16px}
+.num{display:grid;gap:2px;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
+.num.best{border:2px solid var(--blue);background:var(--sky)}
+.num.retired{opacity:.6}.num.retired .mono{text-decoration:line-through}
+.check{display:flex;gap:10px;align-items:flex-start}
+.check input{margin-top:4px;width:18px;height:18px;flex:none}
+.note-line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.note-line.ok{background:var(--green-bg);border-color:transparent}
+.note-line .txt[contenteditable="true"]{outline:1px dashed var(--blue);border-radius:4px;padding:2px}
+.mini{font-size:.78rem;padding:4px 10px;border-radius:8px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.field{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;gap:2px}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));right:max(20px,env(safe-area-inset-right,0px));background:var(--navy);color:var(--surface);padding:12px 16px;border-radius:12px;font-family:var(--f-display);font-size:.9rem;max-width:340px;z-index:20}
+.foot{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+
+@media (max-width:860px){
+  .hero,.grid360,.callgrid,.split{grid-template-columns:1fr}
+  .pillars,.stats{grid-template-columns:1fr}
+  .qcard{grid-template-columns:32px 1fr}
+  .qact{grid-column:2;justify-items:start;grid-auto-flow:column}
+  .prow{grid-template-columns:120px 44px 1fr}
+}
+@media (prefers-reduced-motion:no-preference){.qcard,.alert{transition:transform .15s}.qcard:hover{transform:translateY(-1px)}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#overview" aria-label="CareRounds home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="14" fill="#1F5FE0"/><path d="M15 6a9 9 0 1 0 9 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M15 10v5l3.5 2.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="15" r="2.2" fill="#9DD6FF"/></svg>
+      CareRounds
+    </a>
+    <span class="demo-tag">Prototype · fictional data</span>
+    <nav class="nav" aria-label="Main">
+      <a href="#overview" data-v="overview">Overview</a>
+      <a href="#my-day" data-v="my-day">My Day</a>
+      <a href="#member" data-v="member">Member 360</a>
+      <a href="#call" data-v="call">Call &amp; Document</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- OVERVIEW -->
+  <section class="view" id="v-overview">
+    <div class="hero">
+      <div>
+        <div class="label" style="color:#9DD6FF">Case Management Workbench for health plans</div>
+        <h1 style="margin-top:8px">Your rounds, ready before you are.</h1>
+        <p>CareRounds pulls each member's hospital alerts, pharmacy fills, claims, labs and notes into one trusted view. It ranks who needs the nurse today and drafts the paperwork, so case managers spend their day talking to members instead of hunting for data.</p>
+        <a class="cta" href="#my-day">Open Maria's Monday</a>
+      </div>
+      <div class="hero-card" aria-label="Example of the morning queue">
+        <div class="label">Mon 9 Nov · 8:00 am</div>
+        <div class="row"><span class="pill b-now">🔴 Call now</span><b>Harold B.</b><span class="muted">Follow-up call due today</span></div>
+        <div class="row"><span class="pill b-today">🟠 Call today</span><b>Darnell H.</b><span class="muted">3rd ER visit in 8 weeks</span></div>
+        <div class="row"><span class="pill b-today">🟠 Call today</span><b>Eleanor P.</b><span class="muted">Unsafe medicine mix</span></div>
+        <div class="row"><span class="pill b-week">🟢 This week</span><b>Tanya W.</b><span class="muted">Now in a shelter</span></div>
+      </div>
+    </div>
+
+    <div class="pillars">
+      <div class="pillar"><span class="k">SEE</span><h3>One trusted picture</h3><p class="muted">Every fact shows where it came from and how old it is. When two systems disagree, CareRounds shows both side by side instead of hiding the conflict.</p></div>
+      <div class="pillar"><span class="k">DECIDE</span><h3>Who needs me today</h3><p class="muted">The Today Score ranks members on six things a nurse already checks: deadlines, medicine danger, hospital history, illness, mental health and life barriers. Each one is spelled out in plain words.</p></div>
+      <div class="pillar"><span class="k">ACT</span><h3>Less dialing, less typing</h3><p class="muted">It suggests the number most likely to work and the best time to call. During the call it drafts the note and fills the forms; the nurse confirms every line before anything is saved.</p></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n">6–7 → 1</div><p class="muted">screens to understand one member (brief: claims, auth, pharmacy, HIE, notes, spreadsheet)</p></div>
+      <div class="stat"><div class="n">~15% → 30%</div><p class="muted">of the day spent talking to members: our estimate today, and the pilot target</p></div>
+      <div class="stat"><div class="n">2 days</div><p class="muted">deadline for the first call after a hospital discharge, tracked automatically</p></div>
+    </div>
+
+    <div class="split">
+      <div class="panel">
+        <h2>What the AI does, and what Maria does</h2>
+        <div class="tablebox" style="border:0">
+          <table>
+            <thead><tr><th>CareRounds does automatically</th><th>Maria confirms or decides</th></tr></thead>
+            <tbody>
+              <tr><td>Ranks the queue and explains why</td><td>Who she actually calls first (can override)</td></tr>
+              <tr><td>Finds conflicts between medicine lists</td><td>Which list is right</td></tr>
+              <tr><td>Reads the faxed discharge summary</td><td>Each extracted medicine and date</td></tr>
+              <tr><td>Suggests the best number and time</td><td>Marks a number wrong or right</td></tr>
+              <tr><td>Drafts the call note and form fields</td><td>Every line, before signing</td></tr>
+              <tr><td>Never diagnoses, sends or closes a case</td><td>All clinical judgment</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>How fresh is this?</h2>
+        <p class="muted">Every fact carries a dot, so Maria knows at a glance whether to trust it or re-check it.</p>
+        <div style="display:grid;gap:8px">
+          <div class="fresh" style="font-size:.9rem;color:var(--ink)"><span class="dot d-live"></span><b>Live</b>&nbsp;under 1 day: hospital alerts, pharmacy fills, call log</div>
+          <div class="fresh" style="font-size:.9rem;color:var(--ink)"><span class="dot d-recent"></span><b>Recent</b>&nbsp;1–14 days: labs, clinical records, discharge summaries</div>
+          <div class="fresh" style="font-size:.9rem;color:var(--ink)"><span class="dot d-lag"></span><b>Lagging</b>&nbsp;15–90 days: medical claims, care gaps</div>
+          <div class="fresh" style="font-size:.9rem;color:var(--ink)"><span class="dot d-stale"></span><b>Stale</b>&nbsp;over 90 days: health questionnaires, phone on file</div>
+        </div>
+        <p class="src">Ages are counted from Monday 9 Nov 2026, 8:00 am.</p>
+      </div>
+    </div>
+    <p class="foot">Prototype for the HiLabs APM Product Case 2026–27. All members, numbers, clinicians, hospitals and agencies are fictional. No real patient data.</p>
+  </section>
+
+  <!-- MY DAY -->
+  <section class="view" id="v-my-day" hidden>
+    <div class="dayhead">
+      <div>
+        <div class="label">Monday 9 November 2026 · 8:00 am</div>
+        <h1 style="font-size:1.8rem;margin-top:4px">Good morning, Maria</h1>
+        <p class="muted">48 active cases · 6 new hospital alerts since Friday · showing the 5 sample members</p>
+      </div>
+      <div class="counts" id="counts"></div>
+    </div>
+    <div class="panel" style="gap:8px">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">
+        <h3>Today Score: what each colour in the bar means</h3>
+        <span class="muted" style="font-size:.85rem">100 points · safety rules always win over the score</span>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--s-deadline)"></i>⏰ Deadline (30)</span>
+        <span><i class="sw" style="background:var(--s-danger)"></i>💊 Danger now (25)</span>
+        <span><i class="sw" style="background:var(--s-history)"></i>🏥 Hospital history (20)</span>
+        <span><i class="sw" style="background:var(--s-sick)"></i>🩺 How sick (10)</span>
+        <span><i class="sw" style="background:var(--s-mind)"></i>🧠 Mental health (10)</span>
+        <span><i class="sw" style="background:var(--s-life)"></i>🏠 Life barriers (5)</span>
+      </div>
+    </div>
+    <div class="queue" id="queue"></div>
+  </section>
+
+  <!-- MEMBER 360 -->
+  <section class="view" id="v-member" hidden>
+    <div class="picker" id="picker1" role="group" aria-label="Choose member"></div>
+    <div id="m360"></div>
+  </section>
+
+  <!-- CALL -->
+  <section class="view" id="v-call" hidden>
+    <div class="picker" id="picker2" role="group" aria-label="Choose member"></div>
+    <div id="callv"></div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const PARTS=[["⏰ Deadline","--s-deadline",30],["💊 Danger now","--s-danger",25],["🏥 Hospital history","--s-history",20],["🩺 How sick","--s-sick",10],["🧠 Mental health","--s-mind",10],["🏠 Life barriers","--s-life",5]];
+const ASOF=new Date(2026,10,9,8,0);
+const F=(y,m,d)=>new Date(y,m-1,d);
+function fresh(dt){const days=(ASOF-dt)/864e5;const [c,t]=days<1?["d-live","Live"]:days<=14?["d-recent","Recent"]:days<=90?["d-lag","Lagging"]:["d-stale","Stale"];const age=days<1?"today":Math.round(days)+" d old";return `<span class="fresh"><span class="dot ${c}"></span>${t} · ${age}</span>`}
+const BAND={now:["b-now","🔴 Call now"],today:["b-today","🟠 Call today"],week:["b-week","🟢 This week"]};
+
+const M=[
+{id:"harold",mid:"M-20117",name:"Harold Brennan",short:"Harold B.",age:78,sex:"M",plan:"Dual-eligible plan (D-SNP)",lang:"English",city:"Tampa, FL",pcp:"Dr. L. Okafor",band:"now",
+ parts:[30,25,7,3,0,0],
+ partWhy:["Follow-up call after discharge is due today (2nd business day)","Unsafe mix: lisinopril + Entresto; 2 discharge medicines not picked up; potassium low","2 hospital stays in 12 months, 1 ER visit in 6 months","Heart failure + kidney disease; heart-failure marker very high","No mental-health flags","No barriers on record"],
+ why:"Discharged Thursday with heart failure. Two new medicines not picked up, and his old list has two drugs that are unsafe with the new one.",
+ chips:["Deadline: today","Heart failure","Discharged 5 Nov"],
+ alerts:[
+  ["danger","Unsafe medicine mix","His GP list still has lisinopril, and the hospital started Entresto. They must not be taken together (Entresto needs a 36-hour gap after the last lisinopril dose).","Discharge summary (recv 8 Nov) · GP record (12 Sep)"],
+  ["danger","Discharge medicines not picked up","No pharmacy fill for furosemide or Entresto, 4 days after discharge.","Pharmacy, 7 Nov"],
+  ["warn","Verapamil still being filled","Stopped at discharge because it is risky in heart failure, but it is still active at his pharmacy.","Pharmacy, 21 Oct"],
+  ["warn","Hospital alert disagrees with the record","The alert says 'Transfer'. The health-exchange record shows he went home with home health.","Hospital alert 5 Nov · HIE 6 Nov"]],
+ medHead:["Medicine","Hospital discharge (8 Nov)","Pharmacy","GP record (12 Sep)","Status"],
+ meds:[["Furosemide 40 mg (water pill)","Start","Not filled","—","red|Not picked up"],["Sacubitril/valsartan (Entresto)","Start","Not filled","—","red|Not picked up"],["Carvedilol 25 mg","Start","Filled 6 Nov","—","green|OK"],["Verapamil 80 mg","Stop","Filled 20 Oct","Listed","red|Conflict"],["Lisinopril 10 mg","Stop","No recent fill","Listed","red|Unsafe with Entresto"],["Digoxin 0.125 mg","Not mentioned","No recent fill","Listed","amber|Ask cardiology"]],
+ timeline:[[F(2026,11,8),"Discharge summary arrived by fax, 3 days after discharge","Hospital via HIE"],[F(2026,11,7),"Home health due to start: no visit confirmed","Prior authorization"],[F(2026,11,6),"Carvedilol picked up","Pharmacy"],[F(2026,11,5),"Discharged home (alert said 'Transfer')","Hospital alert + HIE"],[F(2026,10,30),"Admitted with heart failure (alert had no diagnosis)","Hospital alert"],[F(2026,9,12),"GP visit: last bill the plan has received","Claims (arrived 18 Oct)"]],
+ labs:[["Heart-failure marker (NT-proBNP)","4,850 pg/mL","very high",F(2026,10,31),"red"],["Potassium","3.3 mmol/L","low (safe 3.5–5.0)",F(2026,11,4),"amber"],["Kidney function (eGFR)","48","stage 3a",F(2026,11,4),""]],
+ life:[["Lives with wife (82), who is his main caregiver",F(2026,3,14)],["No transport problem",F(2026,3,14)],["1 fall in the past year",F(2026,3,14)]],
+ actions:["Call Harold this morning (deadline today)","Message cardiology: confirm lisinopril and verapamil are stopped before the first Entresto dose","Arrange pharmacy delivery of furosemide and Entresto","Ask the home-health agency whether the first visit happened","Tell the GP about potassium 3.3","Book a cardiology visit by Thu 12 Nov (7-day rule)"],
+ numbers:[{n:"(813) 555-0142",who:"Harold (mobile)",src:"Enrollment file, updated Mar 2026",conf:90,best:true}],
+ bestTime:"No call history yet; try now",permission:["ok","Harold speaks for himself"],
+ checklist:["How is your breathing? Any swelling or weight gain since Thursday?","Have you picked up furosemide and Entresto? Any problem with cost or the pharmacy?","Are you still taking verapamil or lisinopril at home? (Please stop until cardiology confirms.)","Has the home-health nurse visited yet?","Can we book your heart doctor for Thursday? Do you need a ride?","How is your wife managing?"],
+ note:["Reached member by phone on 9 Nov. Discharged home on 5 Nov after a heart-failure stay; the hospital alert's 'transfer' was corrected to 'home'.","Furosemide and sacubitril/valsartan not yet picked up. Pharmacy home delivery requested.","Member still has verapamil and lisinopril at home and was asked to stop both. Cardiology messaged to confirm before the first sacubitril/valsartan dose.","Home-health first visit not yet done. Agency contacted.","Cardiology follow-up booked for 12 Nov."],
+ fields:[["Discharge follow-up call","9 Nov 2026 (within 2 business days)","auto"],["Discharged to","Home with home health","ai"],["Medicines reconciled","Needs your answer","maria"],["Caregiver","Wife, lives with member","ai"]]},
+{id:"darnell",mid:"M-41209",name:"Darnell Hayes",short:"Darnell H.",age:69,sex:"M",plan:"Dual-eligible plan (D-SNP)",lang:"English",city:"Jacksonville, FL",pcp:"Dr. M. Chen",band:"today",
+ parts:[12,10,6,2,0,2],
+ partWhy:["ER follow-up visit must happen by Fri 13 Nov (4 days)","COPD preventer inhaler not picked up for 5 months","1 hospital stay in 12 months, 3 ER visits in 6 months","COPD + atrial fibrillation","No mental-health flags","No ride; lives alone"],
+ why:"Third ER visit in 8 weeks (Friday night). His COPD preventer hasn't been picked up since June, and the number we keep calling is dead.",
+ chips:["Deadline: 13 Nov","COPD","3 ER visits"],
+ alerts:[
+  ["danger","Preventer inhaler not picked up for 5 months","Fluticasone (Flovent) last filled 2 Jun. He fills his blood thinner on time, so this gap is specific.","Pharmacy, 29 Oct"],
+  ["warn","3 ER visits in 8 weeks, no diagnosis on alerts","Only the 19 Oct visit has notes: COPD flare, oxygen 89%. The other two are likely the same: inferred, not confirmed.","Hospital alerts · HIE"],
+  ["warn","The number on file is dead","5 calls to the landline: 3 disconnected, 2 no answer. The pharmacy has a newer mobile number from 21 Oct.","Call log · Pharmacy"],
+  ["info","Rescue inhaler used heavily","Albuterol filled 3 times in 6 weeks: a sign his COPD is not controlled.","Pharmacy, 28 Oct"]],
+ medHead:["Medicine","ER note (19 Oct)","Pharmacy","GP record","Status"],
+ meds:[["Fluticasone (Flovent) preventer","Continue","Last filled 2 Jun","Listed","red|Not picked up"],["Albuterol (ProAir) rescue","As needed","Filled 3× in 6 weeks","Listed","amber|Overuse"],["Apixaban 5 mg (blood thinner)","—","On time, 25 Oct","Listed","green|OK"]],
+ timeline:[[F(2026,11,6),"ER visit at 23:40, sent home same night (no diagnosis on alert)","Hospital alert"],[F(2026,10,30),"5th call attempt: disconnected","Call log"],[F(2026,10,28),"Rescue inhaler picked up (3rd time in 6 weeks)","Pharmacy"],[F(2026,10,21),"New mobile number saved at pharmacy","Pharmacy"],[F(2026,10,19),"ER visit: COPD flare, oxygen 89%","HIE"],[F(2026,9,14),"ER visit: bill arrived 44 days later","Claims"]],
+ labs:[["Oxygen level at ER","89%","low (normal 92%+)",F(2026,10,19),"amber"]],
+ life:[["Lives alone",F(2025,12,10)],["No access to transportation",F(2025,12,10)],["Smoker",F(2025,12,10)]],
+ actions:["Stop calling the landline (retired)","Text, then call, the mobile from the pharmacy record","Ask about the preventer inhaler: cost? pharmacy? technique?","Book a GP visit before Fri 13 Nov and a plan-paid ride","Offer stop-smoking support"],
+ numbers:[{n:"(904) 555-0127",who:"Darnell (mobile)",src:"Pharmacy record, 21 Oct",conf:80,best:true},{n:"(904) 555-0188",who:"Home landline",src:"Enrollment file, 2023",conf:5,retired:true,reason:"3× disconnected"}],
+ bestTime:"Morning calls: 0 of 5 answered. Try a text first, then call after 5 pm.",permission:["ok","Darnell speaks for himself"],
+ checklist:["How is your breathing since Friday?","Do you have your Flovent preventer? What got in the way?","Can we book your GP before Friday? We can send a ride.","Is this mobile the best number for you?","Would you like help to stop smoking?"],
+ note:["Reached member on mobile number from pharmacy record; landline retired after repeated disconnects.","Member reports breathlessness since 6 Nov ER visit; preventer inhaler not used since summer due to cost.","Preventer refill arranged; low-cost option discussed.","GP visit booked for 12 Nov with plan-paid ride (meets 7-day ER follow-up)."],
+ fields:[["Primary phone","(904) 555-0127 (mobile)","ai"],["ER follow-up visit","12 Nov 2026","maria"],["Barrier","Cost of medicine","ai"],["Transport","Ride booked","maria"]]},
+{id:"eleanor",mid:"M-60391",name:"Eleanor Pratt",short:"Eleanor P.",age:84,sex:"F",plan:"Integrated dual plan (FIDE, assumed)",lang:"English",city:"Gainesville, FL",pcp:"Dr. Patel",band:"today",
+ parts:[0,20,2,3,0,1],
+ partWhy:["No hard deadline this week","Two blood-pressure medicines that shouldn't be combined; potassium high","1 hospital stay in 12 months, 1 ER visit in 6 months","Dementia + kidney disease; kidney function falling","No mental-health flags","Daughter (caregiver) overwhelmed"],
+ why:"Two doctors prescribe blood-pressure medicines that shouldn't be combined, her potassium is high and her kidneys are getting worse. Her daughter is struggling.",
+ chips:["Safety flag","Dementia","Caregiver strain"],
+ alerts:[
+  ["danger","Two medicines that shouldn't be combined","Lisinopril (GP) and losartan (kidney doctor) work the same way. Together they can push potassium dangerously high.","Pharmacy, 18 and 22 Oct"],
+  ["danger","Potassium high and kidneys worse","Potassium 5.4 (safe 3.5–5.0). eGFR fell from 38 to 33 in a month.","Lab, 24 Oct"],
+  ["warn","Home aide approved but never came","Medicaid home aide, 20 h/week, due to start 30 Oct. No visit logged.","Prior authorization"],
+  ["warn","No permission to talk with her daughter","Daughter Karen answers every call, but there is no HIPAA authorization on file.","Enrollment · Call log"]],
+ medHead:["Medicine","Prescriber","Pharmacy","Lab check","Status"],
+ meds:[["Lisinopril 20 mg","Dr. Patel (GP)","Filled 18 Oct","K+ 5.4","red|Duplicate therapy"],["Losartan 50 mg","Dr. Ruiz (kidney)","Filled 22 Oct","K+ 5.4","red|Duplicate therapy"]],
+ timeline:[[F(2026,11,2),"Daughter: 'I can't keep doing this alone'. Mentions mom 'talking about stopping treatment'","Case note"],[F(2026,10,30),"Home aide due to start: no visit","Prior authorization"],[F(2026,10,24),"Potassium 5.4, eGFR 33","Lab"],[F(2026,10,22),"Losartan filled (kidney doctor)","Pharmacy"],[F(2026,10,18),"Lisinopril filled (GP)","Pharmacy"],[F(2026,9,30),"ER visit after a fall","Claims + alerts"]],
+ labs:[["Potassium","5.4 mmol/L","high (safe 3.5–5.0)",F(2026,10,24),"red"],["Kidney function (eGFR)","33 (was 38 in Sep)","falling",F(2026,10,24),"amber"]],
+ life:[["Needs help with bathing, dressing, toileting, meals",F(2026,4,8)],["2 falls this year",F(2026,4,8)],["Lives with daughter Karen, who is overwhelmed",F(2026,11,2)]],
+ actions:["Message Dr. Patel today: lisinopril + losartan with potassium 5.4","Send Karen the authorized-representative form before discussing details","Call Gentle Hands Home Care: why hasn't the aide started?","Offer a palliative-care conversation and record advance-directive wishes","Refer Karen to caregiver respite support"],
+ numbers:[{n:"(352) 555-0163",who:"Daughter Karen (stored as 'home')",src:"Enrollment file, 2024",conf:95,best:true}],
+ bestTime:"Afternoons: 4 of 4 calls answered between 2 and 4 pm.",permission:["no","No HIPAA authorization: you can't share health details with Karen until the form is signed."],
+ checklist:["Introduce yourself to Karen; explain the authorization form","Has the home aide come at all?","How is your mother eating, sleeping and moving?","Has she talked about her wishes for care? Would a palliative-care talk help?","What support would help you most this week?"],
+ note:["Spoke with daughter Karen (caregiver). Authorized-representative form sent; no health details shared yet.","Home aide approved from 30 Oct has not started. Agency contacted.","GP messaged about lisinopril with losartan and potassium 5.4.","Karen interested in caregiver respite; referral started."],
+ fields:[["Authorized representative","Form sent, pending","maria"],["Home aide status","Not started: agency called","ai"],["Caregiver strain","Yes (daughter)","ai"],["Advance directive","Not on file: discuss","maria"]]},
+{id:"tanya",mid:"M-52874",name:"Tanya Whitfield",short:"Tanya W.",age:58,sex:"F",plan:"Dual-eligible plan (D-SNP)",lang:"English",city:"Miami, FL",pcp:"Dr. A. Brooks",band:"week",
+ parts:[0,0,4,0,10,1],
+ partWhy:["Alcohol ER follow-up window open until 24 Nov","No medicine danger flags","2 ER visits in 6 months","No serious long-term conditions counted","Depression score 17 (self-harm answer: no) + ER visit for alcohol","Now living in a shelter"],
+ why:"Depression score 17 (no self-harm thoughts) and an ER visit for alcohol on 25 Oct. She lost her home and is staying at a shelter.",
+ chips:["Mental health","Housing","Consent needed"],
+ alerts:[
+  ["warn","Depression score 17","Moderately severe. Self-harm question answered 'not at all', so behavioral-health follow-up this week, not a crisis call.","GP record, 22 Oct"],
+  ["warn","Housing changed: now in a shelter","The housing screen from February says 'stable'. A 28 Oct note says she has been at a shelter since mid-October.","Case note 28 Oct · Screen Feb 2026"],
+  ["info","🔒 Restricted record: substance-use treatment","A treatment-program record exists. It stays hidden until Tanya gives consent (federal Part 2 rule). Ask on the call.","Treatment program"],
+  ["info","Alcohol ER follow-up still open","Follow-up after the 25 Oct ER visit is due by 24 Nov.","Quality measure (FUA)"]],
+ medHead:["Medicine","Prescriber","Pharmacy","GP record","Status"],
+ meds:[["Sertraline 100 mg (antidepressant)","Dr. Brooks","Filled 10 Oct","Listed","green|OK"],["Amlodipine 2.5 mg","Dr. Brooks","On time","Listed","green|OK"],["🔒 1 sensitive medicine","—","Hidden","—","amber|Consent needed"]],
+ timeline:[[F(2026,10,28),"Social worker reached her: staying at Harbor Light Shelter since ~15 Oct","Case note"],[F(2026,10,25),"ER visit: alcohol intoxication and fall; discharged to shelter","HIE"],[F(2026,10,22),"Depression score 17, anxiety score 12","GP record"],[F(2026,10,10),"Sertraline picked up","Pharmacy"],[F(2026,2,12),"Housing screen: 'stable' (now wrong)","Screening"]],
+ labs:[["Depression score (PHQ-9)","17 of 27","moderately severe · self-harm: no",F(2026,10,22),"amber"],["Anxiety score (GAD-7)","12 of 21","moderate",F(2026,10,22),""]],
+ life:[["Staying at a shelter since mid-October",F(2026,10,28)],["Prepaid phone often runs out of minutes",F(2026,10,28)],["Food: 'never a problem' (likely outdated)",F(2026,2,12)]],
+ actions:["Call her mobile; if it's out of minutes, ask the social worker to reach her","Ask for consent to share her treatment-program record (one consent covers care)","Book behavioral-health follow-up this week","Update her address and re-do the housing and food screen","Coordinate with the shelter case worker, with her permission"],
+ numbers:[{n:"(305) 555-0174",who:"Tanya (prepaid mobile)",src:"Enrollment file",conf:60,best:true,note:"Sometimes out of minutes: don't retire"},{n:"(305) 555-0190",who:"Shelter case worker",src:"Case note, 28 Oct",conf:85,note:"Only with Tanya's permission"}],
+ bestTime:"Connected once, 28 Oct at 11 am.",permission:["ok","Tanya speaks for herself · ask before contacting the shelter"],
+ checklist:["How are you feeling this week? Are you safe where you are staying?","Can I share your treatment-program information with your care team? (consent)","Can we book a counselor visit this week?","Where should we send mail? Do you have enough food?","May I talk to the shelter case worker if I can't reach you?"],
+ note:["Reached member by mobile. Staying at a shelter since mid-October; address updated.","Depression follow-up booked with behavioral-health counselor this week.","Member gave consent for the care team to see treatment-program records.","Housing and food screen repeated; referral to housing support started."],
+ fields:[["Current address","Shelter (updated)","maria"],["Part 2 consent","Given / not given","maria"],["BH follow-up","Booked this week","maria"],["Housing screen","Re-done 9 Nov","ai"]]},
+{id:"rosa",mid:"M-30562",name:"Rosa Delgado",short:"Rosa D.",age:67,sex:"F",plan:"Medicare Advantage HMO",lang:"Spanish",city:"Orlando, FL",pcp:"Dr. S. Iyer",band:"week",
+ parts:[0,5,0,2,0,2],
+ partWhy:["No hard deadline","Insulin may not be picked up for ~45 days (unsure: could be a cash purchase)","No hospital or ER use","Diabetes with kidney disease; A1c above 9%","No mental-health flags","Can't afford medicine; food sometimes short"],
+ why:"Her insulin hasn't been picked up for about 45 days and her A1c keeps rising. An old 'adherent' report hides it. She prefers Spanish.",
+ chips:["Diabetes","Spanish","Duplicate ID"],
+ alerts:[
+  ["warn","Insulin may not have been picked up for ~45 days","Humulin 70/30 last filled 26 Aug. Unsure: this insulin is sold over the counter for cash, which we can't see. Ask her.","Pharmacy · medium confidence"],
+  ["warn","Blood sugar control getting worse","A1c 7.2% → 8.4% → 9.1% this year.","Lab, 21 Oct"],
+  ["info","Duplicate member record merged","Old ID M-28841 held her lisinopril fills. Now combined.","Identity match"],
+  ["info","Calls were in the wrong language","Prefers Spanish; the last 2 calls were in English.","Enrollment · Call log"]],
+ medHead:["Medicine","GP record","Pharmacy","Claims report (30 Sep)","Status"],
+ meds:[["Insulin 70/30 (Humulin)","Listed","Last filled 26 Aug","'Adherent 86%'","amber|Gap ~45 days (unsure)"],["Metformin ER 500 mg","Listed","Due 1 Nov (8 days late)","'Adherent'","amber|Late"],["Lisinopril 10 mg","Listed","Filled 2 Oct (old ID)","—","green|OK after merge"]],
+ timeline:[[F(2026,10,22),"2 calls in English: 'call back later'","Call log"],[F(2026,10,21),"A1c 9.1%","Lab"],[F(2026,10,2),"Lisinopril filled under old member ID","Pharmacy"],[F(2026,9,30),"Claims report says 'adherent' (built on old data)","Quality report"],[F(2026,8,26),"Insulin last picked up","Pharmacy"],[F(2026,6,10),"Last GP visit","Claims"]],
+ labs:[["A1c (blood sugar, 3 months)","9.1%","above 9% = poor control",F(2026,10,21),"red"],["Kidney function (eGFR)","58","stage 3a",F(2026,10,21),""]],
+ life:[["Cost of medicine is a problem",F(2026,1,15)],["Food sometimes runs short",F(2026,1,15)],["Works part-time",F(2026,1,15)]],
+ actions:["Reassign to a Spanish-speaking case manager","Ask how she gets her insulin and whether cost is the problem ($35/month Medicare insulin cap)","Book a GP visit; close eye-exam and kidney-test gaps on the same call","Offer a food-support referral"],
+ numbers:[{n:"(407) 555-0119",who:"Rosa (mobile)",src:"Enrollment file, Jan 2026",conf:85,best:true}],
+ bestTime:"Unknown: last calls reached her but she asked to call back. Try evenings, in Spanish.",permission:["ok","Rosa speaks for herself · Spanish"],
+ checklist:["(Spanish) How have you been getting your insulin?","Is the cost of insulin a problem? (Medicare caps it at $35 a month)","Can we book Dr. Iyer and your eye exam?","Do you have enough food at home?"],
+ note:["Spanish-speaking case manager reached member. Member buying human insulin over the counter for cash since September because of cost.","Explained the $35/month Medicare insulin cap; pharmacy fill arranged.","GP visit and diabetic eye exam booked."],
+ fields:[["Language used","Spanish","auto"],["Insulin source","Cash, over the counter","ai"],["Barrier","Cost","ai"],["Care gaps closed","Eye exam booked","maria"]]}
+];
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s);
+function bar(p){return `<div class="bar" role="img" aria-label="Score parts: ${p.map((v,i)=>PARTS[i][0]+' '+v).join(', ')}">${p.map((v,i)=>v?`<i style="width:${v}%;background:var(${PARTS[i][1]})"></i>`:"").join("")}</div>`}
+function status(s){const [c,t]=s.split("|");return `<span class="st-${c}">${t}</span>`}
+
+function renderDay(){
+  const c={now:0,today:0,week:0};M.forEach(m=>c[m.band]++);
+  $("#counts").innerHTML=`<div class="count"><div class="n" style="color:var(--red)">${c.now}</div><div class="muted">🔴 Call now</div></div><div class="count"><div class="n" style="color:var(--amber)">${c.today}</div><div class="muted">🟠 Call today</div></div><div class="count"><div class="n" style="color:var(--green)">${c.week}</div><div class="muted">🟢 This week</div></div>`;
+  $("#queue").innerHTML=M.map((m,i)=>{const tot=m.parts.reduce((a,b)=>a+b,0);const [bc,bt]=BAND[m.band];return `
+  <article class="qcard ${m.band}">
+    <div class="rank">${i+1}</div>
+    <div class="qmain">
+      <div class="qtitle"><h3>${m.name}</h3><span class="muted">${m.age}${m.sex} · ${m.plan} · ${m.lang}</span><span class="pill ${bc}">${bt}</span></div>
+      <p class="why">${m.why}</p>
+      <div class="scoreline"><span class="score">${tot}<small> / 100</small></span>${bar(m.parts)}</div>
+      <div class="chips">${m.chips.map(x=>`<span class="chip">${x}</span>`).join("")}</div>
+      <details class="parts"><summary>Why ${tot} points?</summary><div class="ptable">${m.parts.map((v,k)=>`<div class="prow"><span>${PARTS[k][0]}</span><b>${v}/${PARTS[k][2]}</b><span class="muted">${m.partWhy[k]}</span></div>`).join("")}</div></details>
+    </div>
+    <div class="qact"><a class="btn" href="#member" data-open="${m.id}">Open member</a><a class="btn ghost" href="#call" data-open="${m.id}">Call</a></div>
+  </article>`}).join("");
+}
+let cur="harold";
+function picker(el){el.innerHTML=M.map(m=>`<button type="button" data-pick="${m.id}" aria-pressed="${m.id===cur}">${m.short} <span class="dot ${m.band==='now'?'d-stale':m.band==='today'?'d-lag':'d-live'}" style="margin-left:4px"></span></button>`).join("")}
+function render360(){
+  const m=M.find(x=>x.id===cur);const tot=m.parts.reduce((a,b)=>a+b,0);const [bc,bt]=BAND[m.band];
+  $("#m360").innerHTML=`
+  <div class="view">
+    <div class="mhead">
+      <div><div class="label">${m.mid}</div><h2 style="font-size:1.5rem">${m.name}, ${m.age}</h2></div>
+      <div class="facts"><span><span class="muted">Plan</span> ${m.plan}</span><span><span class="muted">Language</span> ${m.lang}</span><span><span class="muted">GP</span> ${m.pcp}</span><span><span class="muted">Lives in</span> ${m.city}</span></div>
+      <div style="margin-left:auto;display:grid;gap:6px;justify-items:end"><span class="pill ${bc}">${bt} · ${tot}/100</span>${bar(m.parts)}</div>
+    </div>
+    <div><div class="label" style="margin-bottom:8px">Needs your attention: top of the screen on purpose</div>
+    <div class="alerts">${m.alerts.map(a=>`<div class="alert ${a[0]}"><span class="t">${a[1]}</span><span>${a[2]}</span><span class="src">Source: ${a[3]}</span></div>`).join("")}</div></div>
+    <div class="grid360">
+      <div class="view" style="gap:16px">
+        <div class="panel"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><h3>Medicines: every source side by side</h3><span class="ai-tag">AI found the conflicts · you decide</span></div>
+          <div class="tablebox" style="border:0"><table><thead><tr>${m.medHead.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${m.meds.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${status(r[4])}</td></tr>`).join("")}</tbody></table></div></div>
+        <div class="panel"><h3>What happened, newest first</h3><div class="timeline">${m.timeline.map(t=>`<div class="tl"><span class="when">${t[0].toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span><div><div>${t[1]}</div><div style="display:flex;gap:10px;flex-wrap:wrap"><span class="src">${t[2]}</span>${fresh(t[0])}</div></div></div>`).join("")}</div></div>
+      </div>
+      <div class="view" style="gap:16px">
+        <div class="panel actions"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><h3>Next best actions</h3><span class="ai-tag">AI suggested</span></div><ol>${m.actions.map(a=>`<li>${a}</li>`).join("")}</ol><a class="btn" href="#call" data-open="${m.id}" style="justify-self:start">Start call</a></div>
+        <div class="panel"><h3>Labs and scores</h3>${m.labs.map(l=>`<div style="display:grid;gap:2px;padding-bottom:8px;border-bottom:1px dashed var(--line)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span>${l[0]}</span><b class="${l[4]?'st-'+l[4]:''}">${l[1]}</b></div><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="src">${l[2]}</span>${fresh(l[3])}</div></div>`).join("")}</div>
+        <div class="panel"><h3>Life and support</h3>${m.life.map(l=>`<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span>${l[0]}</span>${fresh(l[1])}</div>`).join("")}<p class="src">Stale items get a 're-check on the next call' prompt.</p></div>
+      </div>
+    </div>
+  </div>`;
+}
+let confirmed=new Set();
+function renderCall(){
+  const m=M.find(x=>x.id===cur);confirmed=new Set();
+  const perm=m.permission[0]==="ok"?`<span class="st-green">✔ ${m.permission[1]}</span>`:`<span class="st-red">✖ ${m.permission[1]}</span>`;
+  $("#callv").innerHTML=`
+  <div class="callgrid">
+    <div class="view" style="gap:16px">
+      <div class="panel"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><h3>📞 How to reach ${m.short}</h3><span class="ai-tag">AI ranked the numbers</span></div>
+        ${m.numbers.map(n=>`<div class="num ${n.best?'best':''} ${n.retired?'retired':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="mono" style="font-size:1rem">${n.n}</span><span class="label">${n.best?'Try first':n.retired?'Retired':'Backup'}${n.conf!=null&&!n.retired?' · '+n.conf+'% likely to reach':''}</span></div><span>${n.who}</span><span class="src">${n.src}${n.reason?' · '+n.reason:''}${n.note?' · '+n.note:''}</span></div>`).join("")}
+        <div><div class="label">Best time</div><p>${m.bestTime}</p></div>
+        <div><div class="label">Language</div><p>${m.lang}</p></div>
+        <div><div class="label">Who may we speak to?</div><p>${perm}</p></div>
+      </div>
+      <div class="panel"><h3>Call checklist</h3><p class="src">Built from this member's open issues. Tick as you go.</p>${m.checklist.map((c,i)=>`<label class="check" for="ck-${m.id}-${i}"><input type="checkbox" id="ck-${m.id}-${i}"><span>${c}</span></label>`).join("")}</div>
+    </div>
+    <div class="view" style="gap:16px">
+      <div class="panel"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><h3>Call note: drafted for you</h3><span class="ai-tag">AI draft · not saved until you confirm</span></div>
+        <p class="src">Example of the note after the call. Confirm each line, or edit it first. Nothing is saved until every line is confirmed and you sign.</p>
+        <div style="display:grid;gap:8px" id="notelines">${m.note.map((n,i)=>`<div class="note-line" data-i="${i}"><span class="txt">${n}</span><span style="display:flex;gap:6px"><button type="button" class="btn ghost mini" data-edit="${i}">Edit</button><button type="button" class="btn mini" data-ok="${i}">Confirm</button></span></div>`).join("")}</div>
+      </div>
+      <div class="panel"><h3>Assessment fields: pre-filled</h3><div class="fields">${m.fields.map(f=>`<div class="field"><span class="label">${f[0]}</span><span>${f[1]}</span>${f[2]==='ai'?'<span class="ai-tag" style="justify-self:start">AI filled · check</span>':f[2]==='auto'?'<span class="src">Filled from records</span>':'<span class="src st-amber">Needs your answer</span>'}</div>`).join("")}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button type="button" class="btn" id="sign" disabled>Sign and save</button><span class="src" id="signhint">${m.note.length} lines left to confirm</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,3200)}
+document.addEventListener("click",e=>{
+  const o=e.target.closest("[data-open]");if(o){cur=o.dataset.open}
+  const p=e.target.closest("[data-pick]");if(p){cur=p.dataset.pick;show(location.hash.slice(1)||"overview")}
+  const ok=e.target.closest("[data-ok]");if(ok){const i=+ok.dataset.ok;const line=document.querySelector(`.note-line[data-i="${i}"]`);line.classList.add("ok");line.querySelector(".txt").contentEditable="false";ok.textContent="Confirmed";ok.disabled=true;confirmed.add(i);const m=M.find(x=>x.id===cur);const left=m.note.length-confirmed.size;$("#signhint").textContent=left?left+" lines left to confirm":"All lines confirmed";$("#sign").disabled=left>0}
+  const ed=e.target.closest("[data-edit]");if(ed){const t=document.querySelector(`.note-line[data-i="${ed.dataset.edit}"] .txt`);t.contentEditable="true";t.focus()}
+  if(e.target.id==="sign"){const m=M.find(x=>x.id===cur);toast(`Saved for ${m.short}. ${m.actions.length} follow-up tasks created. Today Score updated.`)}
+});
+function show(v){
+  if(!["overview","my-day","member","call"].includes(v))v="overview";
+  ["overview","my-day","member","call"].forEach(x=>{$("#v-"+x).hidden=x!==v});
+  document.querySelectorAll(".nav a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  if(v==="my-day")renderDay();
+  if(v==="member"){picker($("#picker1"));render360()}
+  if(v==="call"){picker($("#picker2"));renderCall()}
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",()=>show(location.hash.slice(1)));
+show(location.hash.slice(1)||"overview");
+</script>
+
+</html>
